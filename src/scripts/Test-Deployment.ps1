@@ -7,13 +7,11 @@ param(
     [string]$ResourceGroupName = "HyperVLab-Test-RG",
 
     [Parameter(Mandatory = $false)]
-    [string]$Location = "swedencentral",
-
-    [Parameter(Mandatory = $false)]
+    [string]$Location = "swedencentral",    [Parameter(Mandatory = $false)]
     [string]$ComputerName = "hypervhost",
 
     [Parameter(Mandatory = $false)]
-    [string]$AdminUsername = "azureuser",
+    [string]$AdminUsername = "demouser",
 
     [Parameter(Mandatory = $false)]
     [string]$VmSize = "Standard_D8s_v5",
@@ -27,7 +25,7 @@ param(
 )
 
 # Create a secure password for testing purposes only
-$securePassword = ConvertTo-SecureString -String "TestPassword123!" -AsPlainText -Force
+$securePassword = ConvertTo-SecureString -String "demo!pass123" -AsPlainText -Force
 
 # Check if Azure PowerShell is installed
 if (!(Get-Module -ListAvailable -Name Az)) {

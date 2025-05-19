@@ -3,14 +3,13 @@
   "parameters": {
     "location": {
       "value": "swedencentral"
-    },
-    "computerName": {
+    },    "computerName": {
       "value": "hypervhost"
     },
     "AdminUsername": {
-      "value": "azureuser"
+      "value": "demouser"
     },    "AdminPassword": {
-      "value": "P@ssw0rd1234"
+      "value": "demo!pass123"
     },
     "VirtualMachineSize": {
       "value": "Standard_D8s_v5"

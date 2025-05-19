@@ -7,13 +7,11 @@ param(
     [string]$ResourceGroupName = "HyperVLab-RG",
 
     [Parameter(Mandatory = $false)]
-    [string]$Location = "swedencentral",
-
-    [Parameter(Mandatory = $false)]
+    [string]$Location = "swedencentral",    [Parameter(Mandatory = $false)]
     [string]$ComputerName = "hypervhost",
 
     [Parameter(Mandatory = $false)]
-    [string]$AdminUsername = "azureuser",
+    [string]$AdminUsername = "demouser",
 
     [Parameter(Mandatory = $false)]
     [string]$VmSize = "Standard_D8s_v5",

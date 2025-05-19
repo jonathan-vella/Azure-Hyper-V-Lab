@@ -87,13 +87,13 @@ az group create --name HyperVLab --location swedencentral
 az deployment group create \
   --resource-group HyperVLab \
   --template-file src/bicep/main.bicep \
-  --parameters computerName=hypervhost AdminUsername=yourUsername AdminPassword=yourStrongPassword
+  --parameters computerName=hypervhost AdminUsername=demouser AdminPassword='demo!pass123'
 ```
 
 #### PowerShell Deployment:
 ```powershell
 # Option 1: Use the deployment script (recommended)
-.\src\scripts\Deploy-HyperVLab.ps1 -ResourceGroupName "MyHyperVLab" -Location "swedencentral" -AdminPassword (ConvertTo-SecureString -String 'yourStrongPassword' -AsPlainText -Force)
+.\src\scripts\Deploy-HyperVLab.ps1 -ResourceGroupName "MyHyperVLab" -Location "swedencentral" -AdminPassword (ConvertTo-SecureString -String 'demo!pass123' -AsPlainText -Force)
 
 # Option 2: Manual deployment
 New-AzResourceGroup -Name HyperVLab -Location swedencentral
@@ -103,14 +103,14 @@ New-AzResourceGroupDeployment `
   -TemplateFile src\bicep\main.bicep `
   -computerName hypervhost `
   -AdminUsername yourUsername `
-  -AdminPassword (ConvertTo-SecureString -String 'yourStrongPassword' -AsPlainText -Force)
+  -AdminPassword (ConvertTo-SecureString -String 'demo!pass123' -AsPlainText -Force)
 ```
 
 ### Bash/Azure CLI Deployment:
 ```bash
 # Option 1: Use the deployment script (recommended)
 chmod +x ./src/scripts/deploy-hyperv-lab.sh
-./src/scripts/deploy-hyperv-lab.sh --resource-group MyHyperVLab --location swedencentral --password 'yourStrongPassword'
+./src/scripts/deploy-hyperv-lab.sh --resource-group MyHyperVLab --location swedencentral --password 'demo!pass123'
 
 # Option 2: Manual deployment
 az group create --name HyperVLab --location swedencentral
@@ -118,7 +118,7 @@ az group create --name HyperVLab --location swedencentral
 az deployment group create \
   --resource-group HyperVLab \
   --template-file main.bicep \
-  --parameters computerName=hypervhost AdminUsername=azureuser AdminPassword='yourStrongPassword'
+  --parameters computerName=hypervhost AdminUsername=demouser AdminPassword='demo!pass123'
 ```
 
 ## 📝 General Notes

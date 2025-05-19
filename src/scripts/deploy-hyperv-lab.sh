@@ -8,7 +8,7 @@ set -e
 RESOURCE_GROUP="HyperVLab-RG"
 LOCATION="swedencentral"
 COMPUTER_NAME="hypervhost"
-ADMIN_USERNAME="azureuser"
+ADMIN_USERNAME="demouser"
 VM_SIZE="Standard_D8s_v5"
 ADMIN_PASSWORD=""
 DEPLOY_BASTION=true
@@ -22,7 +22,7 @@ function show_help {
   echo "  -g, --resource-group   Resource group name (default: HyperVLab-RG)"
   echo "  -l, --location         Azure region (default: swedencentral)"
   echo "  -n, --name             Computer name (default: hypervhost)"
-  echo "  -u, --username         Admin username (default: azureuser)"
+  echo "  -u, --username         Admin username (default: demouser)"
   echo "  -s, --vm-size          VM size (default: Standard_D8s_v5)"
   echo "  -p, --password         Admin password (required)"
   echo "  -b, --bastion          Deploy Azure Bastion (true/false, default: true)"

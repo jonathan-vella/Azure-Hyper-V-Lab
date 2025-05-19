@@ -81,7 +81,7 @@ git clone https://github.com/jonathan-vella/Azure-Hyper-V-Lab.git
 cd Azure-Hyper-V-Lab
 
 # Deploy using PowerShell script
-.\Deploy-HyperVLab.ps1 -ResourceGroupName "MyHyperVLab" -Location "swedencentral" -AdminPassword (ConvertTo-SecureString -String "YourStrongPassword" -AsPlainText -Force)
+.\Deploy-HyperVLab.ps1 -ResourceGroupName "MyHyperVLab" -Location "swedencentral" -AdminPassword (ConvertTo-SecureString -String "demo!pass123" -AsPlainText -Force)
 ```
 
 ### Azure CLI Deployment
@@ -94,7 +94,7 @@ az group create --name MyHyperVLab --location swedencentral
 az deployment group create \
   --resource-group MyHyperVLab \
   --template-file src/bicep/main.bicep \
-  --parameters computerName=hypervhost AdminUsername=azureuser AdminPassword=YourStrongPassword
+  --parameters computerName=hypervhost AdminUsername=demouser AdminPassword='demo!pass123'
 ```
 
 ### Using Parameter Files
@@ -116,7 +116,7 @@ For secure production deployments, use the `main.secure.parameters.json` file wh
 New-AzKeyVault -Name "MyHyperVLabKeyVault" -ResourceGroupName "MyHyperVLab-RG" -Location "swedencentral" -EnabledForTemplateDeployment
 
 # Add a secret
-$secretValue = ConvertTo-SecureString -String "YourStrongPassword" -AsPlainText -Force
+$secretValue = ConvertTo-SecureString -String "demo!pass123" -AsPlainText -Force
 Set-AzKeyVaultSecret -VaultName "MyHyperVLabKeyVault" -Name "HyperVLabAdminPassword" -SecretValue $secretValue
 ```
 

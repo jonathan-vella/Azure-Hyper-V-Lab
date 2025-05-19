@@ -20,7 +20,7 @@ New-NetNat -Name "Nat-Switch" -InternalIPInterfaceAddressPrefix 172.16.0.0/24
 Add-DhcpServerSecurityGroup
 
 # Create a DHCP scope for the nested VMs with a specified IP range
-Add-DhcpServerv4Scope -Name "Nested VMs" -StartRange 172.16.0.10 -EndRange 172.16.0.100 -SubnetMask 255.255.255.0
+Add-DhcpServerv4Scope -Name "Nested VMs" -StartRange 172.16.0.100 -EndRange 172.16.0.120 -SubnetMask 255.255.255.0
 
 # Set DNS server and default gateway options for the DHCP scope
 Set-DhcpServerv4OptionValue -DnsServer 168.63.129.16 -Router 172.16.0.1

@@ -22,17 +22,16 @@ cd Azure-Hyper-V-Lab
 Connect-AzAccount
 
 # Run the deployment with default values (except password)
-.\Deploy-HyperVLab.ps1 -AdminPassword (ConvertTo-SecureString -String 'YourSecurePassword123!' -AsPlainText -Force)
+.\Deploy-HyperVLab.ps1 -AdminPassword (ConvertTo-SecureString -String 'demo!pass123' -AsPlainText -Force)
 
 # Or with custom values
 .\Deploy-HyperVLab.ps1 -ResourceGroupName "MyHyperVLab" `
                        -Location "swedencentral" `
-                       -ComputerName "hyperv01" `
-                       -AdminUsername "labadmin" `
+                       -ComputerName "hyperv01" `                       -AdminUsername "demouser" `
                        -DeployBastion $true `
                        -BastionSku "Standard" `
                        -VmSize "Standard_D16s_v5" `
-                       -AdminPassword (ConvertTo-SecureString -String 'YourSecurePassword123!' -AsPlainText -Force)
+                       -AdminPassword (ConvertTo-SecureString -String 'demo!pass123' -AsPlainText -Force)
 ```
 
 ## Option 2: Azure CLI Deployment (Cross-platform)
@@ -52,17 +51,16 @@ chmod +x ./src/scripts/deploy-hyperv-lab.sh
 az login
 
 # Run the deployment with default values (except password)
-./src/scripts/deploy-hyperv-lab.sh --password 'YourSecurePassword123!'
+./src/scripts/deploy-hyperv-lab.sh --password 'demo!pass123'
 
 # Or with custom values
 ./src/scripts/deploy-hyperv-lab.sh --resource-group "MyHyperVLab" \
                       --location "swedencentral" \
-                      --name "hyperv01" \
-                      --username "labadmin" \
+                      --name "hyperv01" \                      --username "demouser" \
                       --bastion true \
                       --bastion-sku "Standard" \
                       --vm-size "Standard_D16s_v5" \
-                      --password 'YourSecurePassword123!'
+                      --password 'demo!pass123'
 ```
 
 ## Option 3: Manual Deployment

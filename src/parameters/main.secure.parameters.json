@@ -3,12 +3,11 @@
   "parameters": {
     "location": {
       "value": "swedencentral"
-    },
-    "computerName": {
+    },    "computerName": {
       "value": "hypervhost"
     },
     "AdminUsername": {
-      "value": "azureuser"
+      "value": "demouser"
     },
     "AdminPassword": {
       "reference": {
