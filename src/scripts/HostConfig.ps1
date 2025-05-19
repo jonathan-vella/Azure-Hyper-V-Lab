@@ -85,4 +85,24 @@ $Shortcut3.Save()
 # Copy the Hyper-V Manager shortcut to the desktop
 Copy-Item -Path "C:\ProgramData\Microsoft\Windows\Start Menu\Programs\Administrative Tools\Hyper-V Manager.lnk" -Destination "C:\Users\Public\Desktop\Hyper-V Manager.lnk"
 
+### Copy Guest VM Setup Scripts ###
+# Ensure C:\temp exists
+if (-not (Test-Path "C:\temp")) {
+    New-Item -Path "C:\temp" -ItemType Directory -Force | Out-Null
+}
+
+# Copy guest VM setup scripts to C:\temp
+$scriptSource = "$PSScriptRoot"
+$guestScripts = @(
+    "DC01-Setup.ps1",
+    "SQL01-Setup.ps1",
+    "WEB01-Setup.ps1"
+)
+foreach ($script in $guestScripts) {
+    $src = Join-Path $scriptSource $script
+    if (Test-Path $src) {
+        Copy-Item -Path $src -Destination "C:\temp\" -Force
+    }
+}
+
 
