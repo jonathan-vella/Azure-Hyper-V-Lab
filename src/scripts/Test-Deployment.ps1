@@ -16,7 +16,14 @@ param(
     [string]$AdminUsername = "azureuser",
 
     [Parameter(Mandatory = $false)]
-    [string]$VmSize = "Standard_D8s_v5"
+    [string]$VmSize = "Standard_D8s_v5",
+    
+    [Parameter(Mandatory = $false)]
+    [bool]$DeployBastion = $true,
+
+    [Parameter(Mandatory = $false)]
+    [ValidateSet("Basic", "Standard")]
+    [string]$BastionSku = "Basic"
 )
 
 # Create a secure password for testing purposes only
@@ -64,6 +71,8 @@ $parameters = @{
     AdminUsername = $AdminUsername
     AdminPassword = $securePassword
     VirtualMachineSize = $VmSize
+    deployBastion = $DeployBastion
+    bastionSku = $BastionSku
 }
 
 # Execute template in what-if mode to show changes without deploying

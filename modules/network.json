@@ -1,0 +1,248 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "_generator": {
+      "name": "bicep",
+      "version": "0.34.44.8038",
+      "templateHash": "10636913310032520550"
+    }
+  },
+  "parameters": {
+    "location": {
+      "type": "string",
+      "metadata": {
+        "description": "Location for all resources."
+      }
+    },
+    "namingPrefix": {
+      "type": "string",
+      "metadata": {
+        "description": "Name prefix for all network resources"
+      }
+    },
+    "vnetName": {
+      "type": "string",
+      "metadata": {
+        "description": "Virtual Network(VNet) Configuration"
+      }
+    },
+    "vnetaddressPrefix": {
+      "type": "string"
+    },
+    "subnetName": {
+      "type": "string"
+    },
+    "subnetPrefix": {
+      "type": "string"
+    },
+    "bastionSubnetPrefix": {
+      "type": "string",
+      "defaultValue": "192.168.0.128/26",
+      "metadata": {
+        "description": "Bastion Subnet Configuration"
+      }
+    },
+    "deployBastion": {
+      "type": "bool",
+      "defaultValue": true
+    },
+    "bastionSku": {
+      "type": "string",
+      "defaultValue": "Basic",
+      "allowedValues": [
+        "Basic",
+        "Standard"
+      ]
+    }
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "apiVersion": "2023-05-01",
+      "name": "[format('{0}-nsg', parameters('namingPrefix'))]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "securityRules": [
+          {
+            "name": "Allow_RDP",
+            "properties": {
+              "protocol": "Tcp",
+              "sourcePortRange": "*",
+              "destinationPortRange": "3389",
+              "sourceAddressPrefix": "*",
+              "destinationAddressPrefix": "*",
+              "access": "Allow",
+              "priority": 100,
+              "direction": "Inbound",
+              "sourcePortRanges": [],
+              "destinationPortRanges": [],
+              "sourceAddressPrefixes": [],
+              "destinationAddressPrefixes": []
+            }
+          }
+        ]
+      },
+      "tags": {
+        "purpose": "hyper-v-lab"
+      },
+      "metadata": {
+        "description": "Deployment of Network Security Group(NSG)"
+      }
+    },
+    {
+      "type": "Microsoft.Network/virtualNetworks",
+      "apiVersion": "2023-05-01",
+      "name": "[format('{0}-vnet', parameters('vnetName'))]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "addressSpace": {
+          "addressPrefixes": [
+            "[parameters('vnetaddressPrefix')]"
+          ]
+        },
+        "subnets": [
+          {
+            "name": "[parameters('subnetName')]",
+            "properties": {
+              "addressPrefix": "[parameters('subnetPrefix')]",
+              "networkSecurityGroup": {
+                "id": "[resourceId('Microsoft.Network/networkSecurityGroups', format('{0}-nsg', parameters('namingPrefix')))]"
+              }
+            }
+          },
+          {
+            "name": "AzureBastionSubnet",
+            "properties": {
+              "addressPrefix": "[parameters('bastionSubnetPrefix')]"
+            }
+          }
+        ]
+      },
+      "tags": {
+        "purpose": "hyper-v-lab"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/networkSecurityGroups', format('{0}-nsg', parameters('namingPrefix')))]"
+      ],
+      "metadata": {
+        "description": "Deployment of Virtual Network(VNet)"
+      }
+    },
+    {
+      "condition": "[parameters('deployBastion')]",
+      "type": "Microsoft.Network/publicIPAddresses",
+      "apiVersion": "2023-05-01",
+      "name": "[format('{0}-bastion-pip', parameters('namingPrefix'))]",
+      "location": "[parameters('location')]",
+      "sku": {
+        "name": "Standard",
+        "tier": "Regional"
+      },
+      "properties": {
+        "publicIPAllocationMethod": "Static",
+        "dnsSettings": {
+          "domainNameLabel": "[toLower(format('{0}-bastion', parameters('namingPrefix')))]"
+        }
+      },
+      "tags": {
+        "purpose": "hyper-v-lab"
+      },
+      "metadata": {
+        "description": "Deployment of Public IP Address for Azure Bastion"
+      }
+    },
+    {
+      "condition": "[parameters('deployBastion')]",
+      "type": "Microsoft.Network/bastionHosts",
+      "apiVersion": "2023-05-01",
+      "name": "[format('{0}-bastion', parameters('namingPrefix'))]",
+      "location": "[parameters('location')]",
+      "sku": {
+        "name": "[parameters('bastionSku')]"
+      },
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "IpConf",
+            "properties": {
+              "subnet": {
+                "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', format('{0}-vnet', parameters('vnetName')), 'AzureBastionSubnet')]"
+              },
+              "publicIPAddress": {
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses', format('{0}-bastion-pip', parameters('namingPrefix')))]"
+              }
+            }
+          }
+        ]
+      },
+      "tags": {
+        "purpose": "hyper-v-lab"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/publicIPAddresses', format('{0}-bastion-pip', parameters('namingPrefix')))]"
+      ],
+      "metadata": {
+        "description": "Deployment of Azure Bastion"
+      }
+    },
+    {
+      "type": "Microsoft.Network/networkInterfaces",
+      "apiVersion": "2023-05-01",
+      "name": "[format('{0}-nic', parameters('namingPrefix'))]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig01",
+            "properties": {
+              "privateIPAllocationMethod": "Dynamic",
+              "subnet": {
+                "id": "[format('{0}/subnets/{1}', resourceId('Microsoft.Network/virtualNetworks', format('{0}-vnet', parameters('vnetName'))), parameters('subnetName'))]"
+              }
+            }
+          }
+        ],
+        "dnsSettings": {
+          "dnsServers": []
+        },
+        "enableIPForwarding": true,
+        "networkSecurityGroup": {
+          "id": "[resourceId('Microsoft.Network/networkSecurityGroups', format('{0}-nsg', parameters('namingPrefix')))]"
+        }
+      },
+      "tags": {
+        "purpose": "hyper-v-lab"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/networkSecurityGroups', format('{0}-nsg', parameters('namingPrefix')))]",
+        "[resourceId('Microsoft.Network/virtualNetworks', format('{0}-vnet', parameters('vnetName')))]"
+      ],
+      "metadata": {
+        "description": "Deployment of Network Interface Card(NIC)"
+      }
+    }
+  ],
+  "outputs": {
+    "nicId": {
+      "type": "string",
+      "value": "[resourceId('Microsoft.Network/networkInterfaces', format('{0}-nic', parameters('namingPrefix')))]"
+    },
+    "bastionEnabled": {
+      "type": "bool",
+      "value": "[parameters('deployBastion')]"
+    },
+    "bastionName": {
+      "type": "string",
+      "value": "[if(parameters('deployBastion'), format('{0}-bastion', parameters('namingPrefix')), 'Not deployed')]"
+    },
+    "bastionFqdn": {
+      "type": "string",
+      "value": "[if(parameters('deployBastion'), reference(resourceId('Microsoft.Network/publicIPAddresses', format('{0}-bastion-pip', parameters('namingPrefix'))), '2023-05-01').dnsSettings.domainNameLabel, 'No Bastion deployed')]"
+    },
+    "vmPrivateIp": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.Network/networkInterfaces', format('{0}-nic', parameters('namingPrefix'))), '2023-05-01').ipConfigurations[0].properties.privateIPAddress]"
+    }
+  }
+}

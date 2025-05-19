@@ -11,6 +11,8 @@ COMPUTER_NAME="hypervhost"
 ADMIN_USERNAME="azureuser"
 VM_SIZE="Standard_D8s_v5"
 ADMIN_PASSWORD=""
+DEPLOY_BASTION=true
+BASTION_SKU="Basic"
 
 # Help function
 function show_help {
@@ -23,6 +25,8 @@ function show_help {
   echo "  -u, --username         Admin username (default: azureuser)"
   echo "  -s, --vm-size          VM size (default: Standard_D8s_v5)"
   echo "  -p, --password         Admin password (required)"
+  echo "  -b, --bastion          Deploy Azure Bastion (true/false, default: true)"
+  echo "  -k, --bastion-sku      Azure Bastion SKU (Basic/Standard, default: Basic)"
   echo "  -h, --help             Show this help message"
   exit 0
 }
@@ -52,6 +56,14 @@ while [[ $# -gt 0 ]]; do
       ;;
     -p|--password)
       ADMIN_PASSWORD="$2"
+      shift 2
+      ;;
+    -b|--bastion)
+      DEPLOY_BASTION="$2"
+      shift 2
+      ;;
+    -k|--bastion-sku)
+      BASTION_SKU="$2"
       shift 2
       ;;
     -h|--help)
@@ -128,6 +140,8 @@ az deployment group create \
                AdminUsername="$ADMIN_USERNAME" \
                AdminPassword="$ADMIN_PASSWORD" \
                VirtualMachineSize="$VM_SIZE" \
+               deployBastion="$DEPLOY_BASTION" \
+               bastionSku="$BASTION_SKU" \
   --verbose
 
 # Check deployment status
@@ -141,24 +155,44 @@ if [[ "$DEPLOYMENT_STATUS" == "Succeeded" ]]; then
   echo -e "\n\033[0;32mDeployment succeeded!\033[0m"
   
   # Get deployment outputs
-  HOSTNAME=$(az deployment group show \
+  VM_NAME=$(az deployment group show \
     --name "$DEPLOYMENT_NAME" \
     --resource-group "$RESOURCE_GROUP" \
-    --query "properties.outputs.hostname.value" \
+    --query "properties.outputs.vmName.value" \
     -o tsv)
   
-  RDP_COMMAND=$(az deployment group show \
+  VM_PRIVATE_IP=$(az deployment group show \
     --name "$DEPLOYMENT_NAME" \
     --resource-group "$RESOURCE_GROUP" \
-    --query "properties.outputs.rdpCommand.value" \
+    --query "properties.outputs.vmPrivateIp.value" \
+    -o tsv)
+  
+  BASTION_ENABLED=$(az deployment group show \
+    --name "$DEPLOYMENT_NAME" \
+    --resource-group "$RESOURCE_GROUP" \
+    --query "properties.outputs.bastionEnabled.value" \
+    -o tsv)
+    
+  BASTION_NAME=$(az deployment group show \
+    --name "$DEPLOYMENT_NAME" \
+    --resource-group "$RESOURCE_GROUP" \
+    --query "properties.outputs.bastionName.value" \
+    -o tsv)
+    
+  CONNECTION_METHOD=$(az deployment group show \
+    --name "$DEPLOYMENT_NAME" \
+    --resource-group "$RESOURCE_GROUP" \
+    --query "properties.outputs.connectionMethod.value" \
     -o tsv)
   
   echo -e "\n\033[0;36mHyper-V Lab Deployment Details:\033[0m"
   echo "================================"
-  echo "Computer Name: $COMPUTER_NAME"
+  echo "VM Name: $VM_NAME"
+  echo "VM Private IP: $VM_PRIVATE_IP"
   echo "Username: $ADMIN_USERNAME"
-  echo "Hostname: $HOSTNAME"
-  echo "RDP Command: $RDP_COMMAND"
+  echo "Bastion Enabled: $BASTION_ENABLED"
+  echo "Bastion Name: $BASTION_NAME"
+  echo "Connection Method: $CONNECTION_METHOD"
   echo -e "\nThe deployment takes approximately 30 minutes to complete all VM extensions."
   echo "You can monitor the status in the Azure Portal."
 else

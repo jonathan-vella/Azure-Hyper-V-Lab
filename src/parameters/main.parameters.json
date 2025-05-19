@@ -23,9 +23,17 @@
     },
     "subnetName": {
       "value": "snet-hypervlab-01"
-    },
-    "subnetPrefix": {
+    },    "subnetPrefix": {
       "value": "192.168.0.0/28"
+    },
+    "bastionSubnetPrefix": {
+      "value": "192.168.0.128/26"
+    },
+    "deployBastion": {
+      "value": true
+    },
+    "bastionSku": {
+      "value": "Basic"
     },
     "dscFileUrl": {
       "value": "https://github.com/jonathan-vella/Azure-Hyper-V-Lab/raw/main/dsc/DSCInstallWindowsFeatures.zip"

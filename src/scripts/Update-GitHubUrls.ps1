@@ -16,7 +16,8 @@ $files = @(
     "..\..\src\parameters\main.parameters.json",
     "..\..\src\parameters\main.secure.parameters.json",
     "..\..\README.md",
-    "..\..\QUICKSTART.md"
+    "..\..\QUICKSTART.md",
+    "..\..\DEPLOY.md"
 )
 
 $placeholder = "your-username"

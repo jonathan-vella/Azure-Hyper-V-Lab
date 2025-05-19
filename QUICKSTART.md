@@ -29,6 +29,8 @@ Connect-AzAccount
                        -Location "swedencentral" `
                        -ComputerName "hyperv01" `
                        -AdminUsername "labadmin" `
+                       -DeployBastion $true `
+                       -BastionSku "Standard" `
                        -VmSize "Standard_D16s_v5" `
                        -AdminPassword (ConvertTo-SecureString -String 'YourSecurePassword123!' -AsPlainText -Force)
 ```
@@ -57,6 +59,8 @@ az login
                       --location "swedencentral" \
                       --name "hyperv01" \
                       --username "labadmin" \
+                      --bastion true \
+                      --bastion-sku "Standard" \
                       --vm-size "Standard_D16s_v5" \
                       --password 'YourSecurePassword123!'
 ```
@@ -92,7 +96,12 @@ If you encounter issues during deployment:
 ## After Deployment
 
 1. Wait for the deployment to complete (approximately 30 minutes)
-2. Connect to the VM using RDP with the provided credentials
+2. Connect to the VM using Azure Bastion:
+   - Navigate to the VM resource in the Azure Portal
+   - Click on "Connect" in the top menu
+   - Select "Bastion" as the connection method
+   - Enter your VM credentials (username and password)
+   - Click "Connect" to start the browser-based RDP session
 3. Start using Hyper-V Manager to create your virtual machines
 
 For more detailed information, refer to the [Modular Template Guide](MODULAR-TEMPLATE-GUIDE.md).

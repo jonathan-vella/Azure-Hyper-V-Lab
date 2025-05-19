@@ -137,6 +137,15 @@ param vnetaddressPrefix string = '192.168.0.0/24'
 param subnetName string = 'snet-hypervlab-01'
 param subnetPrefix string = '192.168.0.0/28'
 
+@description('Bastion Configuration')
+param bastionSubnetPrefix string = '192.168.0.128/26'
+param deployBastion bool = true
+@allowed([
+  'Basic'
+  'Standard'
+])
+param bastionSku string = 'Basic'
+
 // DSC and custom script configuration
 @description('URL to the DSC configuration file. Update this with your own GitHub username when forking the repository.')
 param dscFileUrl string = 'https://github.com/jonathan-vella/Azure-Hyper-V-Lab/raw/main/dsc/DSCInstallWindowsFeatures.zip'
@@ -157,6 +166,9 @@ module networkResources '../../modules/network.bicep' = {
     vnetaddressPrefix: vnetaddressPrefix
     subnetName: subnetName
     subnetPrefix: subnetPrefix
+    bastionSubnetPrefix: bastionSubnetPrefix
+    deployBastion: deployBastion
+    bastionSku: bastionSku
   }
 }
 
@@ -186,5 +198,8 @@ module vmExtensions '../../modules/vm-extensions.bicep' = {
 
 // Outputs
 output adminUsername string = AdminUsername
-output hostname string = networkResources.outputs.pipFqdn != null ? networkResources.outputs.pipFqdn : 'No FQDN available'
-output rdpCommand string = networkResources.outputs.pipFqdn != null ? 'mstsc.exe /v:${networkResources.outputs.pipFqdn}' : 'mstsc.exe /v:${computerName}'
+output vmName string = computerName
+output bastionEnabled string = networkResources.outputs.bastionEnabled ? 'Yes - Use Azure Bastion to connect to VM' : 'No'
+output bastionName string = networkResources.outputs.bastionName
+output vmPrivateIp string = networkResources.outputs.vmPrivateIp
+output connectionMethod string = networkResources.outputs.bastionEnabled ? 'Connect via Azure Bastion in the Azure portal using the VM private IP address and admin credentials' : 'No remote access method configured. Consider enabling Azure Bastion.'

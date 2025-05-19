@@ -125,6 +125,8 @@ az deployment group create \
 
 > **Important**: Before sharing or using this repository, replace all instances of `jonathan-vella` with your actual GitHub username in the URLs and code.
 
+- **Enhanced Security**: The VM has no public IP address and is accessed through Azure Bastion for improved security.
+- **Azure Bastion**: Choose between Basic or Standard SKU based on your needs. Basic SKU provides essential connectivity while Standard offers additional features.
 - A wide range of VM sizes is pre-configured in the template to avoid deployment errors.
 - The VM uses **Azure Spot Instances** with an eviction policy set to `deallocate`.
 - Use the **Microsoft Evaluation Center** desktop shortcut to evaluate Microsoft software and operating systems.

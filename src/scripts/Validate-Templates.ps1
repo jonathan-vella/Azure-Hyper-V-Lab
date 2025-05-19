@@ -48,13 +48,20 @@ if (-not $rg) {
     $rg = New-AzResourceGroup -Name $resourceGroupName -Location $Location
 }
 
-# Test parameters for validation
+# Use simple fixed parameters just for validation to avoid any issues
 $parameters = @{
     location = $Location
     computerName = "validationvm"
     AdminUsername = "validationuser"
     AdminPassword = (ConvertTo-SecureString -String "Validation123!" -AsPlainText -Force)
     VirtualMachineSize = "Standard_D8s_v5"
+    vnetName = "vnet-validation-01"
+    vnetaddressPrefix = "192.168.0.0/24"
+    subnetName = "snet-validation-01"
+    subnetPrefix = "192.168.0.0/28"
+    bastionSubnetPrefix = "192.168.0.128/26"
+    deployBastion = $true
+    bastionSku = "Basic"
 }
 
 # Validate each Bicep file

@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.34.44.8038",
-      "templateHash": "12606492642819538169"
+      "templateHash": "14894130821592574834"
     }
   },
   "parameters": {
@@ -167,13 +167,38 @@
       "type": "string",
       "defaultValue": "192.168.0.0/28"
     },
+    "bastionSubnetPrefix": {
+      "type": "string",
+      "defaultValue": "192.168.0.128/26",
+      "metadata": {
+        "description": "Bastion Configuration"
+      }
+    },
+    "deployBastion": {
+      "type": "bool",
+      "defaultValue": true
+    },
+    "bastionSku": {
+      "type": "string",
+      "defaultValue": "Basic",
+      "allowedValues": [
+        "Basic",
+        "Standard"
+      ]
+    },
     "dscFileUrl": {
       "type": "string",
-      "defaultValue": "https://github.com/jonathan-vella/Azure-Hyper-V-Lab/raw/main/dsc/DSCInstallWindowsFeatures.zip"
+      "defaultValue": "https://github.com/jonathan-vella/Azure-Hyper-V-Lab/raw/main/dsc/DSCInstallWindowsFeatures.zip",
+      "metadata": {
+        "description": "URL to the DSC configuration file. Update this with your own GitHub username when forking the repository."
+      }
     },
     "customScriptUrl": {
       "type": "string",
-      "defaultValue": "https://raw.githubusercontent.com/jonathan-vella/Azure-Hyper-V-Lab/main/src/scripts/HostConfig.ps1"
+      "defaultValue": "https://raw.githubusercontent.com/jonathan-vella/Azure-Hyper-V-Lab/main/src/scripts/HostConfig.ps1",
+      "metadata": {
+        "description": "URL to the custom script file. Update this with your own GitHub username when forking the repository."
+      }
     }
   },
   "variables": {
@@ -207,6 +232,15 @@
           },
           "subnetPrefix": {
             "value": "[parameters('subnetPrefix')]"
+          },
+          "bastionSubnetPrefix": {
+            "value": "[parameters('bastionSubnetPrefix')]"
+          },
+          "deployBastion": {
+            "value": "[parameters('deployBastion')]"
+          },
+          "bastionSku": {
+            "value": "[parameters('bastionSku')]"
           }
         },
         "template": {
@@ -216,7 +250,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.34.44.8038",
-              "templateHash": "8207919154411340344"
+              "templateHash": "10636913310032520550"
             }
           },
           "parameters": {
@@ -246,6 +280,25 @@
             },
             "subnetPrefix": {
               "type": "string"
+            },
+            "bastionSubnetPrefix": {
+              "type": "string",
+              "defaultValue": "192.168.0.128/26",
+              "metadata": {
+                "description": "Bastion Subnet Configuration"
+              }
+            },
+            "deployBastion": {
+              "type": "bool",
+              "defaultValue": true
+            },
+            "bastionSku": {
+              "type": "string",
+              "defaultValue": "Basic",
+              "allowedValues": [
+                "Basic",
+                "Standard"
+              ]
             }
           },
           "resources": [
@@ -302,6 +355,12 @@
                         "id": "[resourceId('Microsoft.Network/networkSecurityGroups', format('{0}-nsg', parameters('namingPrefix')))]"
                       }
                     }
+                  },
+                  {
+                    "name": "AzureBastionSubnet",
+                    "properties": {
+                      "addressPrefix": "[parameters('bastionSubnetPrefix')]"
+                    }
                   }
                 ]
               },
@@ -316,26 +375,60 @@
               }
             },
             {
+              "condition": "[parameters('deployBastion')]",
               "type": "Microsoft.Network/publicIPAddresses",
               "apiVersion": "2023-05-01",
-              "name": "[format('{0}-pip', parameters('namingPrefix'))]",
+              "name": "[format('{0}-bastion-pip', parameters('namingPrefix'))]",
               "location": "[parameters('location')]",
               "sku": {
                 "name": "Standard",
                 "tier": "Regional"
               },
               "properties": {
-                "deleteOption": "Delete",
                 "publicIPAllocationMethod": "Static",
                 "dnsSettings": {
-                  "domainNameLabel": "[toLower(parameters('namingPrefix'))]"
+                  "domainNameLabel": "[toLower(format('{0}-bastion', parameters('namingPrefix')))]"
                 }
               },
               "tags": {
                 "purpose": "hyper-v-lab"
               },
               "metadata": {
-                "description": "Deployment of Public IP Address(PIP)"
+                "description": "Deployment of Public IP Address for Azure Bastion"
+              }
+            },
+            {
+              "condition": "[parameters('deployBastion')]",
+              "type": "Microsoft.Network/bastionHosts",
+              "apiVersion": "2023-05-01",
+              "name": "[format('{0}-bastion', parameters('namingPrefix'))]",
+              "location": "[parameters('location')]",
+              "sku": {
+                "name": "[parameters('bastionSku')]"
+              },
+              "properties": {
+                "ipConfigurations": [
+                  {
+                    "name": "IpConf",
+                    "properties": {
+                      "subnet": {
+                        "id": "[resourceId('Microsoft.Network/virtualNetworks/subnets', format('{0}-vnet', parameters('vnetName')), 'AzureBastionSubnet')]"
+                      },
+                      "publicIPAddress": {
+                        "id": "[resourceId('Microsoft.Network/publicIPAddresses', format('{0}-bastion-pip', parameters('namingPrefix')))]"
+                      }
+                    }
+                  }
+                ]
+              },
+              "tags": {
+                "purpose": "hyper-v-lab"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Network/publicIPAddresses', format('{0}-bastion-pip', parameters('namingPrefix')))]"
+              ],
+              "metadata": {
+                "description": "Deployment of Azure Bastion"
               }
             },
             {
@@ -351,9 +444,6 @@
                       "privateIPAllocationMethod": "Dynamic",
                       "subnet": {
                         "id": "[format('{0}/subnets/{1}', resourceId('Microsoft.Network/virtualNetworks', format('{0}-vnet', parameters('vnetName'))), parameters('subnetName'))]"
-                      },
-                      "publicIPAddress": {
-                        "id": "[resourceId('Microsoft.Network/publicIPAddresses', format('{0}-pip', parameters('namingPrefix')))]"
                       }
                     }
                   }
@@ -371,7 +461,6 @@
               },
               "dependsOn": [
                 "[resourceId('Microsoft.Network/networkSecurityGroups', format('{0}-nsg', parameters('namingPrefix')))]",
-                "[resourceId('Microsoft.Network/publicIPAddresses', format('{0}-pip', parameters('namingPrefix')))]",
                 "[resourceId('Microsoft.Network/virtualNetworks', format('{0}-vnet', parameters('vnetName')))]"
               ],
               "metadata": {
@@ -384,13 +473,21 @@
               "type": "string",
               "value": "[resourceId('Microsoft.Network/networkInterfaces', format('{0}-nic', parameters('namingPrefix')))]"
             },
-            "pipId": {
-              "type": "string",
-              "value": "[resourceId('Microsoft.Network/publicIPAddresses', format('{0}-pip', parameters('namingPrefix')))]"
+            "bastionEnabled": {
+              "type": "bool",
+              "value": "[parameters('deployBastion')]"
             },
-            "pipFqdn": {
+            "bastionName": {
               "type": "string",
-              "value": "[reference(resourceId('Microsoft.Network/publicIPAddresses', format('{0}-pip', parameters('namingPrefix'))), '2023-05-01').dnsSettings.fqdn]"
+              "value": "[if(parameters('deployBastion'), format('{0}-bastion', parameters('namingPrefix')), 'Not deployed')]"
+            },
+            "bastionFqdn": {
+              "type": "string",
+              "value": "[if(parameters('deployBastion'), reference(resourceId('Microsoft.Network/publicIPAddresses', format('{0}-bastion-pip', parameters('namingPrefix'))), '2023-05-01').dnsSettings.domainNameLabel, 'No Bastion deployed')]"
+            },
+            "vmPrivateIp": {
+              "type": "string",
+              "value": "[reference(resourceId('Microsoft.Network/networkInterfaces', format('{0}-nic', parameters('namingPrefix'))), '2023-05-01').ipConfigurations[0].properties.privateIPAddress]"
             }
           }
         }
@@ -601,7 +698,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.34.44.8038",
-              "templateHash": "4829759868132880344"
+              "templateHash": "1384314687468171998"
             }
           },
           "parameters": {
@@ -621,12 +718,15 @@
               "type": "string",
               "defaultValue": "https://github.com/jonathan-vella/Azure-Hyper-V-Lab/raw/main/dsc/DSCInstallWindowsFeatures.zip",
               "metadata": {
-                "description": "Extension dependencies"
+                "description": "URL to the DSC configuration file. Update this with your own GitHub username when forking the repository."
               }
             },
             "customScriptUrl": {
               "type": "string",
-              "defaultValue": "https://raw.githubusercontent.com/jonathan-vella/Azure-Hyper-V-Lab/main/src/scripts/HostConfig.ps1"
+              "defaultValue": "https://raw.githubusercontent.com/jonathan-vella/Azure-Hyper-V-Lab/main/src/scripts/HostConfig.ps1",
+              "metadata": {
+                "description": "URL to the custom script file. Update this with your own GitHub username when forking the repository."
+              }
             }
           },
           "resources": [
@@ -700,13 +800,25 @@
       "type": "string",
       "value": "[parameters('AdminUsername')]"
     },
-    "hostname": {
+    "vmName": {
       "type": "string",
-      "value": "[if(not(equals(reference(resourceId('Microsoft.Resources/deployments', format('{0}-network-{1}', parameters('computerName'), variables('deploymentNameSuffix'))), '2022-09-01').outputs.pipFqdn.value, null())), reference(resourceId('Microsoft.Resources/deployments', format('{0}-network-{1}', parameters('computerName'), variables('deploymentNameSuffix'))), '2022-09-01').outputs.pipFqdn.value, 'No FQDN available')]"
+      "value": "[parameters('computerName')]"
     },
-    "rdpCommand": {
+    "bastionEnabled": {
       "type": "string",
-      "value": "[if(not(equals(reference(resourceId('Microsoft.Resources/deployments', format('{0}-network-{1}', parameters('computerName'), variables('deploymentNameSuffix'))), '2022-09-01').outputs.pipFqdn.value, null())), format('mstsc.exe /v:{0}', reference(resourceId('Microsoft.Resources/deployments', format('{0}-network-{1}', parameters('computerName'), variables('deploymentNameSuffix'))), '2022-09-01').outputs.pipFqdn.value), format('mstsc.exe /v:{0}', parameters('computerName')))]"
+      "value": "[if(reference(resourceId('Microsoft.Resources/deployments', format('{0}-network-{1}', parameters('computerName'), variables('deploymentNameSuffix'))), '2022-09-01').outputs.bastionEnabled.value, 'Yes - Use Azure Bastion to connect to VM', 'No')]"
+    },
+    "bastionName": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.Resources/deployments', format('{0}-network-{1}', parameters('computerName'), variables('deploymentNameSuffix'))), '2022-09-01').outputs.bastionName.value]"
+    },
+    "vmPrivateIp": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.Resources/deployments', format('{0}-network-{1}', parameters('computerName'), variables('deploymentNameSuffix'))), '2022-09-01').outputs.vmPrivateIp.value]"
+    },
+    "connectionMethod": {
+      "type": "string",
+      "value": "[if(reference(resourceId('Microsoft.Resources/deployments', format('{0}-network-{1}', parameters('computerName'), variables('deploymentNameSuffix'))), '2022-09-01').outputs.bastionEnabled.value, 'Connect via Azure Bastion in the Azure portal using the VM private IP address and admin credentials', 'No remote access method configured. Consider enabling Azure Bastion.')]"
     }
   }
 }

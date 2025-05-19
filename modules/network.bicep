@@ -10,6 +10,15 @@ param vnetaddressPrefix string
 param subnetName string
 param subnetPrefix string
 
+@description('Bastion Subnet Configuration')
+param bastionSubnetPrefix string = '192.168.0.128/26' // Using default value
+param deployBastion bool = true // Default to deploy Bastion
+@allowed([
+  'Basic'
+  'Standard'
+])
+param bastionSku string = 'Basic' // Default to Basic SKU
+
 @description('Deployment of Network Security Group(NSG)')
 resource nsg 'Microsoft.Network/networkSecurityGroups@2023-05-01' = {
   name: '${namingPrefix}-nsg'
@@ -60,6 +69,12 @@ resource vnet 'Microsoft.Network/virtualNetworks@2023-05-01' = {
           }
         }
       }
+      {
+        name: 'AzureBastionSubnet' // Required name for Bastion
+        properties: {
+          addressPrefix: bastionSubnetPrefix
+        }
+      }
     ]
   }
   tags: {
@@ -67,20 +82,46 @@ resource vnet 'Microsoft.Network/virtualNetworks@2023-05-01' = {
   }
 }
 
-@description('Deployment of Public IP Address(PIP)')
-resource vmPip 'Microsoft.Network/publicIPAddresses@2023-05-01' = {
-  name: '${namingPrefix}-pip'
+@description('Deployment of Public IP Address for Azure Bastion')
+resource bastionPip 'Microsoft.Network/publicIPAddresses@2023-05-01' = if (deployBastion) {
+  name: '${namingPrefix}-bastion-pip'
   location: location
   sku: {
     name: 'Standard'
     tier: 'Regional'
   }
   properties: {
-    deleteOption: 'Delete'
     publicIPAllocationMethod: 'Static'
     dnsSettings: {
-      domainNameLabel: toLower(namingPrefix)
+      domainNameLabel: toLower('${namingPrefix}-bastion')
     }
+  }
+  tags: {
+    purpose: 'hyper-v-lab'
+  }
+}
+
+@description('Deployment of Azure Bastion')
+resource bastion 'Microsoft.Network/bastionHosts@2023-05-01' = if (deployBastion) {
+  name: '${namingPrefix}-bastion'
+  location: location
+  sku: {
+    name: bastionSku
+  }
+  properties: {
+    ipConfigurations: [
+      {
+        name: 'IpConf'
+        properties: {
+          subnet: {
+            id: resourceId('Microsoft.Network/virtualNetworks/subnets', '${vnetName}-vnet', 'AzureBastionSubnet')
+          }
+          publicIPAddress: {
+            id: bastionPip.id
+          }
+        }
+      }
+    ]
   }
   tags: {
     purpose: 'hyper-v-lab'
@@ -100,9 +141,6 @@ resource vmNic 'Microsoft.Network/networkInterfaces@2023-05-01' = {
           subnet: {
             id: '${vnet.id}/subnets/${subnetName}'
           }
-          publicIPAddress: {
-            id: vmPip.id
-          }
         }
       }
     ]
@@ -120,5 +158,8 @@ resource vmNic 'Microsoft.Network/networkInterfaces@2023-05-01' = {
 
 // Outputs to be used by the VM module
 output nicId string = vmNic.id
-output pipId string = vmPip.id
-output pipFqdn string = vmPip.properties.dnsSettings.fqdn
+output bastionEnabled bool = deployBastion
+output bastionName string = deployBastion ? bastion.name : 'Not deployed'
+output bastionFqdn string = deployBastion ? bastionPip.properties.dnsSettings.domainNameLabel : 'No Bastion deployed'
+// Reference the private IP that is assigned during deployment
+output vmPrivateIp string = vmNic.properties.ipConfigurations[0].properties.privateIPAddress

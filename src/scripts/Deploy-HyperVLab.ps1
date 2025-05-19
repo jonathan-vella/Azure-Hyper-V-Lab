@@ -19,7 +19,14 @@ param(
     [string]$VmSize = "Standard_D8s_v5",
 
     [Parameter(Mandatory = $true)]
-    [securestring]$AdminPassword
+    [securestring]$AdminPassword,
+
+    [Parameter(Mandatory = $false)]
+    [bool]$DeployBastion = $true,
+
+    [Parameter(Mandatory = $false)]
+    [ValidateSet("Basic", "Standard")]
+    [string]$BastionSku = "Basic"
 )
 
 # Check prerequisites
@@ -75,6 +82,8 @@ $parameters = @{
     AdminUsername = $AdminUsername
     AdminPassword = $AdminPassword
     VirtualMachineSize = $VmSize
+    deployBastion = $DeployBastion
+    bastionSku = $BastionSku
 }
 
 # Deploy using Bicep file
@@ -87,17 +96,21 @@ $deployment = New-AzResourceGroupDeployment -Name $deploymentName `
 
 if ($deployment.ProvisioningState -eq "Succeeded") {
     Write-Host "Deployment succeeded!" -ForegroundColor Green
-    
-    # Get deployment outputs
-    $hostname = $deployment.Outputs.hostname.Value
-    $rdpCommand = $deployment.Outputs.rdpCommand.Value
+      # Get deployment outputs
+    $vmName = $deployment.Outputs.vmName.Value
+    $bastionEnabled = $deployment.Outputs.bastionEnabled.Value
+    $bastionName = $deployment.Outputs.bastionName.Value
+    $vmPrivateIp = $deployment.Outputs.vmPrivateIp.Value
+    $connectionMethod = $deployment.Outputs.connectionMethod.Value
     
     Write-Host "`nHyper-V Lab Deployment Details:" -ForegroundColor Cyan
     Write-Host "================================"
-    Write-Host "Computer Name: $ComputerName"
+    Write-Host "VM Name: $vmName"
+    Write-Host "VM Private IP: $vmPrivateIp"
     Write-Host "Username: $AdminUsername"
-    Write-Host "Hostname: $hostname"
-    Write-Host "RDP Command: $rdpCommand"
+    Write-Host "Bastion Enabled: $bastionEnabled"
+    Write-Host "Bastion Name: $bastionName"
+    Write-Host "Connection Method: $connectionMethod"
     Write-Host "`nThe deployment takes approximately 30 minutes to complete all VM extensions."
     Write-Host "You can monitor the status in the Azure Portal."
 }
