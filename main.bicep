@@ -3,7 +3,7 @@
   This template deploys an Azure VM with nested virtualization enabled
   for running Hyper-V workloads in the cloud.
   
-  Author: [Original by george-markou, Modified to be modular]
+  Author: [Original by jonathan-vella, Modified to be modular]
   Last updated: 2025-05-19
 */
 
@@ -138,8 +138,8 @@ param subnetName string = 'snet-hypervlab-01'
 param subnetPrefix string = '192.168.0.0/28'
 
 // DSC and custom script configuration
-param dscFileUrl string = 'https://github.com/george-markou/Azure-Hyper-V-Lab/raw/main/dsc/DSCInstallWindowsFeatures.zip'
-param customScriptUrl string = 'https://raw.githubusercontent.com/george-markou/Azure-Hyper-V-Lab/main/HostConfig.ps1'
+param dscFileUrl string = 'https://github.com/jonathan-vella/Azure-Hyper-V-Lab/raw/main/dsc/DSCInstallWindowsFeatures.zip'
+param customScriptUrl string = 'https://raw.githubusercontent.com/jonathan-vella/Azure-Hyper-V-Lab/main/HostConfig.ps1'
 
 // Deployment name - using unique naming for tracking (no runtime functions)
 var deploymentNameSuffix = uniqueString(resourceGroup().id, computerName)

@@ -63,7 +63,7 @@ This module deploys extensions that configure the VM:
 
 ```powershell
 # Clone the repository
-git clone https://github.com/george-markou/Azure-Hyper-V-Lab.git
+git clone https://github.com/jonathan-vella/Azure-Hyper-V-Lab.git
 cd Azure-Hyper-V-Lab
 
 # Deploy using PowerShell script

@@ -29,10 +29,10 @@
       "value": "192.168.0.0/28"
     },
     "dscFileUrl": {
-      "value": "https://github.com/george-markou/Azure-Hyper-V-Lab/raw/main/dsc/DSCInstallWindowsFeatures.zip"
+      "value": "https://github.com/jonathan-vella/Azure-Hyper-V-Lab/raw/main/dsc/DSCInstallWindowsFeatures.zip"
     },
     "customScriptUrl": {
-      "value": "https://raw.githubusercontent.com/george-markou/Azure-Hyper-V-Lab/main/HostConfig.ps1"
+      "value": "https://raw.githubusercontent.com/jonathan-vella/Azure-Hyper-V-Lab/main/HostConfig.ps1"
     }
   }
 }

@@ -5,8 +5,8 @@ param location string
 param vmName string
 
 @description('Extension dependencies')
-param dscFileUrl string = 'https://github.com/george-markou/Azure-Hyper-V-Lab/raw/main/dsc/DSCInstallWindowsFeatures.zip'
-param customScriptUrl string = 'https://raw.githubusercontent.com/george-markou/Azure-Hyper-V-Lab/main/HostConfig.ps1'
+param dscFileUrl string = 'https://github.com/jonathan-vella/Azure-Hyper-V-Lab/raw/main/dsc/DSCInstallWindowsFeatures.zip'
+param customScriptUrl string = 'https://raw.githubusercontent.com/jonathan-vella/Azure-Hyper-V-Lab/main/HostConfig.ps1'
 
 @description('Deployment of DSC Configuration. Enablement of Hyper-V and DHCP Roles along with RSAT Tools.')
 resource vmExtension 'Microsoft.Compute/virtualMachines/extensions@2023-09-01' = {
