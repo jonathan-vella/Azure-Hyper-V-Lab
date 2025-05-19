@@ -1,96 +1,83 @@
-# Modular Bicep Template Documentation
+# 🧩 Modular Bicep Template Guide
 
-This document provides details on the modular Bicep template structure used for deploying the Azure Hyper-V Lab.
+Welcome! This guide explains the modular Bicep structure powering your Azure Hyper-V Lab. Use the navigation below to jump to any section.
 
-## Template Structure
+- [Template Structure](#template-structure)
+- [Module Responsibilities](#module-responsibilities)
+- [Brew Bliss Coffee Shop Web App](#-brew-bliss-coffee-shop-web-application)
+- [Deployment Options](#deployment-options)
+- [Customization & Extending](#customization-options)
+- [Best Practices](#best-practices-used)
+- [Utilities & Tools](#utilities-and-tools)
 
-The Azure Hyper-V Lab template has been modularized for better maintainability, reusability, and readability. The structure consists of:
+---
+
+## 📦 Template Structure
+
+The Azure Hyper-V Lab template is modular for maintainability, reusability, and clarity:
 
 ```
-├── src/                        # Source code folder
-│   ├── bicep/                  # Bicep templates
-│   │   ├── main.bicep          # Main deployment template
-│   │   └── main.json           # ARM template (compiled from main.bicep)
-│   ├── parameters/             # Parameter files
-│   │   ├── main.parameters.json        # Parameter file for development deployments
-│   │   └── main.secure.parameters.json # Parameter file with Key Vault reference
-│   └── scripts/                # Deployment and utility scripts
-│       ├── Check-ParameterFiles.ps1    # Parameter file validation
-│       ├── deploy-hyperv-lab.sh        # Bash deployment script
-│       ├── Deploy-HyperVLab.ps1        # PowerShell deployment script
-│       ├── HostConfig.ps1              # Custom script for VM configuration
-│       ├── Test-Deployment.ps1         # Deployment testing script
-│       ├── Update-GitHubUrls.ps1       # GitHub URL updater
-│       └── Validate-Templates.ps1      # Template validation script
-├── modules/                    # Folder containing all module files
-│   ├── network.bicep           # Network resources (VNet, NSG, PIP, NIC)
-│   ├── vm.bicep                # Virtual Machine configuration
-│   └── vm-extensions.bicep     # VM extensions (DSC, Custom Script)
-├── dsc/                        # DSC configuration files
-│   └── DSCInstallWindowsFeatures.zip
-├── images/                     # Documentation images
-├── README.md                   # Main documentation
-├── QUICKSTART.md               # Quick start guide
+├── src/
+│   ├── bicep/           # Bicep templates
+│   │   ├── main.bicep   # Main deployment template
+│   │   └── main.json    # ARM template (compiled)
+│   ├── parameters/      # Parameter files
+│   └── scripts/         # Deployment & utility scripts
+│       ├── ...
+│       └── HostConfig.ps1
+│   └── eshop/           # Sample web app & deployment script
+├── modules/             # All Bicep modules
+│   ├── network.bicep
+│   ├── vm.bicep
+│   └── vm-extensions.bicep
+├── dsc/                 # DSC configuration
+├── images/              # Documentation images
+├── README.md            # Main documentation
+├── QUICKSTART.md        # Quick start guide
 └── MODULAR-TEMPLATE-GUIDE.md   # This document
 ```
 
-## Module Responsibilities
+---
 
-### 1. Network Module (`modules/network.bicep`)
+## 🏗️ Module Responsibilities
 
-This module handles the deployment of all networking resources:
-- Network Security Group (NSG) with RDP access rule
-- Virtual Network (VNet) with subnet
-- Public IP Address with static allocation
-- Network Interface Card (NIC)
+### 1. **Network Module** (`modules/network.bicep`)
+- Deploys: NSG (with RDP), VNet, Subnet, Public IP, NIC
+- **Outputs:** `nicId`, `pipId`, `pipFqdn`
 
-**Outputs:**
-- `nicId`: The resource ID of the network interface
-- `pipId`: The resource ID of the public IP address
-- `pipFqdn`: The fully qualified domain name of the public IP
+### 2. **VM Module** (`modules/vm.bicep`)
+- Deploys: Windows Server 2025 VM, OS/data disks, Trusted Launch, Spot instance
+- **Outputs:** `vmId`, `vmName`
 
-### 2. VM Module (`modules/vm.bicep`)
+### 3. **VM Extensions Module** (`modules/vm-extensions.bicep`)
+- Deploys: DSC extension (Hyper-V, DHCP), Custom Script Extension (software/config)
+- **Outputs:** `dscExtensionId`, `customScriptExtensionId`
 
-This module handles the virtual machine deployment:
-- VM with Windows Server 2025 Datacenter
-- OS and data disks configuration
-- Security profile with Trusted Launch
-- Spot instance configuration for cost optimization
+---
 
-**Outputs:**
-- `vmId`: The resource ID of the virtual machine
-- `vmName`: The name of the virtual machine
+## ☕ Brew Bliss Coffee Shop Web Application
 
-### 3. VM Extensions Module (`modules/vm-extensions.bicep`)
+- **Location:** `src/eshop/`
+  - `CoffeeShopWebDeploy.zip`: Web app package
+  - `Deploy-CoffeeShop.ps1`: PowerShell deployment script
+- **How to use:** The deployment script is auto-copied to `C:\temp` on the Azure VM for easy access. See the main deployment guide for usage.
 
-This module deploys extensions that configure the VM:
-- DSC extension for installing Hyper-V and DHCP roles
-- Custom Script Extension for software installation and configuration
+---
 
-**Outputs:**
-- `dscExtensionId`: The resource ID of the DSC extension
-- `customScriptExtensionId`: The resource ID of the custom script extension
+## 🚀 Deployment Options
 
-## Deployment Options
-
-### PowerShell Deployment
-
+### PowerShell
 ```powershell
-# Clone the repository
-git clone https://github.com/jonathan-vella/Azure-Hyper-V-Lab.git
-cd Azure-Hyper-V-Lab
-
-# Deploy using PowerShell script
-.\Deploy-HyperVLab.ps1 -ResourceGroupName "MyHyperVLab" -Location "swedencentral" -AdminPassword (ConvertTo-SecureString -String "demo!pass123" -AsPlainText -Force)
+# Clone the repo
+ git clone https://github.com/jonathan-vella/Azure-Hyper-V-Lab.git
+ cd Azure-Hyper-V-Lab
+# Deploy
+ .\Deploy-HyperVLab.ps1 -ResourceGroupName "MyHyperVLab" -Location "swedencentral" -AdminPassword (ConvertTo-SecureString -String "demo!pass123" -AsPlainText -Force)
 ```
 
-### Azure CLI Deployment
-
+### Azure CLI
 ```bash
-# Create a resource group
 az group create --name MyHyperVLab --location swedencentral
-
-# Deploy the Bicep template
 az deployment group create \
   --resource-group MyHyperVLab \
   --template-file src/bicep/main.bicep \
@@ -98,99 +85,75 @@ az deployment group create \
 ```
 
 ### Using Parameter Files
-
 ```powershell
-# Using the parameter file
 New-AzResourceGroupDeployment -ResourceGroupName "MyHyperVLab" -TemplateFile ".\src\bicep\main.bicep" -TemplateParameterFile ".\src\parameters\main.parameters.json"
 ```
-
-> **Important Note**: Always ensure the `location` parameter in parameter files contains an actual Azure region name (like "swedencentral" or "westeurope"), not an ARM template expression like `[resourceGroup().location]`. Parameter files require literal values.
+> **Note:** Parameter files require literal region names (e.g., `swedencentral`).
 
 ### Production Deployment with Key Vault
-
-For secure production deployments, use the `main.secure.parameters.json` file which references a password stored in Azure Key Vault:
-
 1. Create a Key Vault and add your password as a secret:
-```powershell
-# Create a Key Vault
-New-AzKeyVault -Name "MyHyperVLabKeyVault" -ResourceGroupName "MyHyperVLab-RG" -Location "swedencentral" -EnabledForTemplateDeployment
+   ```powershell
+   New-AzKeyVault -Name "MyHyperVLabKeyVault" -ResourceGroupName "MyHyperVLab-RG" -Location "swedencentral" -EnabledForTemplateDeployment
+   $secretValue = ConvertTo-SecureString -String "demo!pass123" -AsPlainText -Force
+   Set-AzKeyVaultSecret -VaultName "MyHyperVLabKeyVault" -Name "HyperVLabAdminPassword" -SecretValue $secretValue
+   ```
+2. Update `main.secure.parameters.json` with your Key Vault details
+3. Deploy:
+   ```powershell
+   New-AzResourceGroupDeployment -ResourceGroupName "MyHyperVLab-RG" -TemplateFile ".\src\bicep\main.bicep" -TemplateParameterFile ".\src\parameters\main.secure.parameters.json"
+   ```
 
-# Add a secret
-$secretValue = ConvertTo-SecureString -String "demo!pass123" -AsPlainText -Force
-Set-AzKeyVaultSecret -VaultName "MyHyperVLabKeyVault" -Name "HyperVLabAdminPassword" -SecretValue $secretValue
-```
+---
 
-2. Update the `main.secure.parameters.json` file with your Key Vault details
+## 🛠️ Customization & Extending
 
-3. Deploy using the secure parameter file:
-```powershell
-New-AzResourceGroupDeployment -ResourceGroupName "MyHyperVLab-RG" -TemplateFile ".\src\bicep\main.bicep" -TemplateParameterFile ".\src\parameters\main.secure.parameters.json"
-```
+- **Network:** Edit `network.bicep` for VNet, NSG, etc.
+- **VM Size/Config:** Edit `vm.bicep` for VM specs
+- **Extensions/Software:** Edit `vm-extensions.bicep` for installed software
+- **Add Features:**
+  1. Create a new module in `modules/`
+  2. Reference it in `main.bicep`
+  3. Add parameters as needed
 
-## Customization Options
+---
 
-The modular structure allows for easy customization:
+## 🏅 Best Practices Used
+- **Modularity:** Reusable, organized modules
+- **Naming:** Consistent resource names
+- **Dependencies:** Explicit resource dependencies
+- **Tags:** All resources tagged
+- **Parameters:** Sensible defaults, validation
+- **Security:** Trusted Launch, Key Vault support
+- **Cost:** Spot instances for savings
 
-- **Network Configuration**: Modify the `network.bicep` file to change network settings
-- **VM Size and Configuration**: Adjust the `vm.bicep` file to change VM specifications
-- **Extensions and Software**: Update the `vm-extensions.bicep` file to modify the installed software
+---
 
-## Extending the Template
-
-To add new features:
-
-1. Create a new module file in the `modules` folder
-2. Reference the module in `main.bicep`
-3. Add any required parameters to `main.parameters.json`
-
-## Best Practices Used
-
-This template follows Azure best practices:
-
-- **Modularity**: Components are separated into reusable modules
-- **Naming Conventions**: Consistent naming patterns across resources
-- **Resource Dependencies**: Explicit dependencies between resources
-- **Tags**: All resources are tagged for better management
-- **Parameters**: Sensible defaults with parameter validation
-- **Security**: Trusted Launch enabled for enhanced VM security
-- **Cost Optimization**: Using Spot instances for cost savings
-
-## Utilities and Tools
-
-The repository includes several utility scripts to help with the deployment process:
+## 🧰 Utilities and Tools
 
 ### Update-GitHubUrls.ps1
-
-When forking this repository, you'll need to update all GitHub URLs to point to your own repository. This script automates that process:
-
+Update all GitHub URLs after forking:
 ```powershell
-# Example: Update GitHub URLs to use your username
 .\src\scripts\Update-GitHubUrls.ps1 -GitHubUsername "your-github-username"
 ```
 
 ### Check-ParameterFiles.ps1
-
-Validates parameter files to ensure they don't contain ARM template expressions where literal values are expected:
-
+Validate parameter files:
 ```powershell
-# Check all parameter files
 .\src\scripts\Check-ParameterFiles.ps1
 ```
 
 ### Validate-Templates.ps1
-
-Performs a more thorough validation of all Bicep templates:
-
+Validate all Bicep templates:
 ```powershell
-# Validate all templates
 .\src\scripts\Validate-Templates.ps1
 ```
 
 ### Test-Deployment.ps1
-
-Tests the deployment without actually creating resources:
-
+Test deployment (no resources created):
 ```powershell
-# Test deployment
 .\src\scripts\Test-Deployment.ps1 -ResourceGroupName "TestRG"
 ```
+
+---
+
+**For a quick start, see [QUICKSTART.md](./QUICKSTART.md). For full deployment, see [DEPLOY.md](./DEPLOY.md).**

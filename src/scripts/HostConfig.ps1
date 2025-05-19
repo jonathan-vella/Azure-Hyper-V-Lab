@@ -105,4 +105,10 @@ foreach ($script in $guestScripts) {
     }
 }
 
+# Copy eShop deployment script to C:\temp
+$eshopDeployScript = Join-Path $PSScriptRoot "..\eshop\Deploy-CoffeeShop.ps1"
+if (Test-Path $eshopDeployScript) {
+    Copy-Item -Path $eshopDeployScript -Destination "C:\temp\" -Force
+}
+
 
