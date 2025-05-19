@@ -7,7 +7,7 @@ param(
     [string]$ResourceGroupName = "HyperVLab-RG",
 
     [Parameter(Mandatory = $false)]
-    [string]$Location = "eastus",
+    [string]$Location = "swedencentral",
 
     [Parameter(Mandatory = $false)]
     [string]$ComputerName = "hypervhost",
@@ -22,10 +22,22 @@ param(
     [securestring]$AdminPassword
 )
 
-# Check if Azure PowerShell is installed and connect to Azure if not connected
+# Check prerequisites
+Write-Host "Checking prerequisites..." -ForegroundColor Cyan
+
+# Check if Azure PowerShell is installed
 if (!(Get-Module -ListAvailable -Name Az)) {
     Write-Error "Azure PowerShell module not found. Please install it by running: Install-Module -Name Az -AllowClobber -Force"
     exit 1
+}
+
+# Check if Bicep CLI is installed
+try {
+    $bicepVersion = bicep --version
+    Write-Host "Bicep CLI version: $bicepVersion" -ForegroundColor Green
+} catch {
+    Write-Warning "Bicep CLI not found. This is not critical as Azure PowerShell can deploy Bicep files, but the Bicep CLI is recommended for local development."
+    Write-Host "To install Bicep CLI, see: https://learn.microsoft.com/azure/azure-resource-manager/bicep/install" -ForegroundColor Yellow
 }
 
 try {
@@ -58,6 +70,7 @@ $deploymentName = "HyperVLab-Deployment-$(Get-Date -Format 'yyyyMMdd-HHmmss')"
 Write-Host "Starting deployment '$deploymentName' to resource group '$ResourceGroupName'..."
 
 $parameters = @{
+    location = $Location
     computerName = $ComputerName
     AdminUsername = $AdminUsername
     AdminPassword = $AdminPassword
@@ -67,7 +80,7 @@ $parameters = @{
 # Deploy using Bicep file
 $deployment = New-AzResourceGroupDeployment -Name $deploymentName `
                                           -ResourceGroupName $ResourceGroupName `
-                                          -TemplateFile ".\main.bicep" `
+                                          -TemplateFile "..\..\src\bicep\main.bicep" `
                                           -TemplateParameterObject $parameters `
                                           -Mode Incremental `
                                           -Verbose

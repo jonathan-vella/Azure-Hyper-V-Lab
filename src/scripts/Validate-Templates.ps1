@@ -4,17 +4,17 @@
 [CmdletBinding()]
 param (
     [Parameter(Mandatory = $false)]
-    [string]$Location = "eastus"
+    [string]$Location = "swedencentral"
 )
 
 # Variables
 $resourceGroupName = "HyperVLab-Validation-RG"
 $validationDate = Get-Date -Format "yyyyMMdd-HHmmss"
 $bicepFiles = @(
-    ".\main.bicep",
-    ".\modules\network.bicep",
-    ".\modules\vm.bicep",
-    ".\modules\vm-extensions.bicep"
+    "..\..\src\bicep\main.bicep",
+    "..\..\modules\network.bicep",
+    "..\..\modules\vm.bicep",
+    "..\..\modules\vm-extensions.bicep"
 )
 
 Write-Host "Starting validation of Bicep templates..." -ForegroundColor Cyan
@@ -50,6 +50,7 @@ if (-not $rg) {
 
 # Test parameters for validation
 $parameters = @{
+    location = $Location
     computerName = "validationvm"
     AdminUsername = "validationuser"
     AdminPassword = (ConvertTo-SecureString -String "Validation123!" -AsPlainText -Force)

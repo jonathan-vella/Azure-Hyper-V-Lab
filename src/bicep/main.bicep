@@ -138,14 +138,17 @@ param subnetName string = 'snet-hypervlab-01'
 param subnetPrefix string = '192.168.0.0/28'
 
 // DSC and custom script configuration
-param dscFileUrl string = 'https://github.com/jonathan-vella/Azure-Hyper-V-Lab/raw/main/dsc/DSCInstallWindowsFeatures.zip'
-param customScriptUrl string = 'https://raw.githubusercontent.com/jonathan-vella/Azure-Hyper-V-Lab/main/HostConfig.ps1'
+@description('URL to the DSC configuration file. Update this with your own GitHub username when forking the repository.')
+param dscFileUrl string = 'https://github.com/YOUR-USERNAME/Azure-Hyper-V-Lab/raw/main/dsc/DSCInstallWindowsFeatures.zip'
+
+@description('URL to the custom script file. Update this with your own GitHub username when forking the repository.')
+param customScriptUrl string = 'https://raw.githubusercontent.com/YOUR-USERNAME/Azure-Hyper-V-Lab/main/src/scripts/HostConfig.ps1'
 
 // Deployment name - using unique naming for tracking (no runtime functions)
 var deploymentNameSuffix = uniqueString(resourceGroup().id, computerName)
 
 // Deploy network resources module
-module networkResources 'modules/network.bicep' = {
+module networkResources '../../modules/network.bicep' = {
   name: '${computerName}-network-${deploymentNameSuffix}'
   params: {
     location: location
@@ -158,7 +161,7 @@ module networkResources 'modules/network.bicep' = {
 }
 
 // Deploy VM module
-module hyperVHost 'modules/vm.bicep' = {
+module hyperVHost '../../modules/vm.bicep' = {
   name: '${computerName}-vm-${deploymentNameSuffix}'
   params: {
     location: location
@@ -171,7 +174,7 @@ module hyperVHost 'modules/vm.bicep' = {
 }
 
 // Deploy VM extensions module
-module vmExtensions 'modules/vm-extensions.bicep' = {
+module vmExtensions '../../modules/vm-extensions.bicep' = {
   name: '${computerName}-extensions-${deploymentNameSuffix}'
   params: {
     location: location

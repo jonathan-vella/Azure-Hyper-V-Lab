@@ -7,17 +7,31 @@ This document provides details on the modular Bicep template structure used for 
 The Azure Hyper-V Lab template has been modularized for better maintainability, reusability, and readability. The structure consists of:
 
 ```
-├── main.bicep                  # Main deployment template
-├── main.parameters.json        # Parameter file for development deployments
-├── main.secure.parameters.json # Parameter file for production deployments with Key Vault
-├── Deploy-HyperVLab.ps1        # PowerShell deployment script
+├── src/                        # Source code folder
+│   ├── bicep/                  # Bicep templates
+│   │   ├── main.bicep          # Main deployment template
+│   │   └── main.json           # ARM template (compiled from main.bicep)
+│   ├── parameters/             # Parameter files
+│   │   ├── main.parameters.json        # Parameter file for development deployments
+│   │   └── main.secure.parameters.json # Parameter file with Key Vault reference
+│   └── scripts/                # Deployment and utility scripts
+│       ├── Check-ParameterFiles.ps1    # Parameter file validation
+│       ├── deploy-hyperv-lab.sh        # Bash deployment script
+│       ├── Deploy-HyperVLab.ps1        # PowerShell deployment script
+│       ├── HostConfig.ps1              # Custom script for VM configuration
+│       ├── Test-Deployment.ps1         # Deployment testing script
+│       ├── Update-GitHubUrls.ps1       # GitHub URL updater
+│       └── Validate-Templates.ps1      # Template validation script
 ├── modules/                    # Folder containing all module files
 │   ├── network.bicep           # Network resources (VNet, NSG, PIP, NIC)
 │   ├── vm.bicep                # Virtual Machine configuration
 │   └── vm-extensions.bicep     # VM extensions (DSC, Custom Script)
 ├── dsc/                        # DSC configuration files
 │   └── DSCInstallWindowsFeatures.zip
-└── HostConfig.ps1              # Custom script for VM configuration
+├── images/                     # Documentation images
+├── README.md                   # Main documentation
+├── QUICKSTART.md               # Quick start guide
+└── MODULAR-TEMPLATE-GUIDE.md   # This document
 ```
 
 ## Module Responsibilities
@@ -67,19 +81,19 @@ git clone https://github.com/jonathan-vella/Azure-Hyper-V-Lab.git
 cd Azure-Hyper-V-Lab
 
 # Deploy using PowerShell script
-.\Deploy-HyperVLab.ps1 -ResourceGroupName "MyHyperVLab" -Location "eastus" -AdminPassword (ConvertTo-SecureString -String "YourStrongPassword" -AsPlainText -Force)
+.\Deploy-HyperVLab.ps1 -ResourceGroupName "MyHyperVLab" -Location "swedencentral" -AdminPassword (ConvertTo-SecureString -String "YourStrongPassword" -AsPlainText -Force)
 ```
 
 ### Azure CLI Deployment
 
 ```bash
 # Create a resource group
-az group create --name MyHyperVLab --location eastus
+az group create --name MyHyperVLab --location swedencentral
 
 # Deploy the Bicep template
 az deployment group create \
   --resource-group MyHyperVLab \
-  --template-file main.bicep \
+  --template-file src/bicep/main.bicep \
   --parameters computerName=hypervhost AdminUsername=azureuser AdminPassword=YourStrongPassword
 ```
 
@@ -87,8 +101,10 @@ az deployment group create \
 
 ```powershell
 # Using the parameter file
-New-AzResourceGroupDeployment -ResourceGroupName "MyHyperVLab" -TemplateFile ".\main.bicep" -TemplateParameterFile ".\main.parameters.json"
+New-AzResourceGroupDeployment -ResourceGroupName "MyHyperVLab" -TemplateFile ".\src\bicep\main.bicep" -TemplateParameterFile ".\src\parameters\main.parameters.json"
 ```
+
+> **Important Note**: Always ensure the `location` parameter in parameter files contains an actual Azure region name (like "swedencentral" or "westeurope"), not an ARM template expression like `[resourceGroup().location]`. Parameter files require literal values.
 
 ### Production Deployment with Key Vault
 
@@ -97,7 +113,7 @@ For secure production deployments, use the `main.secure.parameters.json` file wh
 1. Create a Key Vault and add your password as a secret:
 ```powershell
 # Create a Key Vault
-New-AzKeyVault -Name "MyHyperVLabKeyVault" -ResourceGroupName "MyHyperVLab-RG" -Location "eastus" -EnabledForTemplateDeployment
+New-AzKeyVault -Name "MyHyperVLabKeyVault" -ResourceGroupName "MyHyperVLab-RG" -Location "swedencentral" -EnabledForTemplateDeployment
 
 # Add a secret
 $secretValue = ConvertTo-SecureString -String "YourStrongPassword" -AsPlainText -Force
@@ -108,7 +124,7 @@ Set-AzKeyVaultSecret -VaultName "MyHyperVLabKeyVault" -Name "HyperVLabAdminPassw
 
 3. Deploy using the secure parameter file:
 ```powershell
-New-AzResourceGroupDeployment -ResourceGroupName "MyHyperVLab-RG" -TemplateFile ".\main.bicep" -TemplateParameterFile ".\main.secure.parameters.json"
+New-AzResourceGroupDeployment -ResourceGroupName "MyHyperVLab-RG" -TemplateFile ".\src\bicep\main.bicep" -TemplateParameterFile ".\src\parameters\main.secure.parameters.json"
 ```
 
 ## Customization Options
@@ -138,3 +154,43 @@ This template follows Azure best practices:
 - **Parameters**: Sensible defaults with parameter validation
 - **Security**: Trusted Launch enabled for enhanced VM security
 - **Cost Optimization**: Using Spot instances for cost savings
+
+## Utilities and Tools
+
+The repository includes several utility scripts to help with the deployment process:
+
+### Update-GitHubUrls.ps1
+
+When forking this repository, you'll need to update all GitHub URLs to point to your own repository. This script automates that process:
+
+```powershell
+# Example: Update GitHub URLs to use your username
+.\src\scripts\Update-GitHubUrls.ps1 -GitHubUsername "your-github-username"
+```
+
+### Check-ParameterFiles.ps1
+
+Validates parameter files to ensure they don't contain ARM template expressions where literal values are expected:
+
+```powershell
+# Check all parameter files
+.\src\scripts\Check-ParameterFiles.ps1
+```
+
+### Validate-Templates.ps1
+
+Performs a more thorough validation of all Bicep templates:
+
+```powershell
+# Validate all templates
+.\src\scripts\Validate-Templates.ps1
+```
+
+### Test-Deployment.ps1
+
+Tests the deployment without actually creating resources:
+
+```powershell
+# Test deployment
+.\src\scripts\Test-Deployment.ps1 -ResourceGroupName "TestRG"
+```

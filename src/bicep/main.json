@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.34.44.8038",
-      "templateHash": "17670113264288736239"
+      "templateHash": "12606492642819538169"
     }
   },
   "parameters": {
@@ -169,11 +169,11 @@
     },
     "dscFileUrl": {
       "type": "string",
-      "defaultValue": "https://github.com/jonathan-vella/Azure-Hyper-V-Lab/raw/main/dsc/DSCInstallWindowsFeatures.zip"
+      "defaultValue": "https://github.com/YOUR-USERNAME/Azure-Hyper-V-Lab/raw/main/dsc/DSCInstallWindowsFeatures.zip"
     },
     "customScriptUrl": {
       "type": "string",
-      "defaultValue": "https://raw.githubusercontent.com/jonathan-vella/Azure-Hyper-V-Lab/main/HostConfig.ps1"
+      "defaultValue": "https://raw.githubusercontent.com/YOUR-USERNAME/Azure-Hyper-V-Lab/main/src/scripts/HostConfig.ps1"
     }
   },
   "variables": {
@@ -601,7 +601,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.34.44.8038",
-              "templateHash": "3853951563188089770"
+              "templateHash": "4829759868132880344"
             }
           },
           "parameters": {
@@ -619,14 +619,14 @@
             },
             "dscFileUrl": {
               "type": "string",
-              "defaultValue": "https://github.com/jonathan-vella/Azure-Hyper-V-Lab/raw/main/dsc/DSCInstallWindowsFeatures.zip",
+              "defaultValue": "https://github.com/YOUR-USERNAME/Azure-Hyper-V-Lab/raw/main/dsc/DSCInstallWindowsFeatures.zip",
               "metadata": {
                 "description": "Extension dependencies"
               }
             },
             "customScriptUrl": {
               "type": "string",
-              "defaultValue": "https://raw.githubusercontent.com/jonathan-vella/Azure-Hyper-V-Lab/main/HostConfig.ps1"
+              "defaultValue": "https://raw.githubusercontent.com/YOUR-USERNAME/Azure-Hyper-V-Lab/main/src/scripts/HostConfig.ps1"
             }
           },
           "resources": [

@@ -6,7 +6,7 @@ set -e
 
 # Default values
 RESOURCE_GROUP="HyperVLab-RG"
-LOCATION="eastus"
+LOCATION="swedencentral"
 COMPUTER_NAME="hypervhost"
 ADMIN_USERNAME="azureuser"
 VM_SIZE="Standard_D8s_v5"
@@ -18,7 +18,7 @@ function show_help {
   echo ""
   echo "Options:"
   echo "  -g, --resource-group   Resource group name (default: HyperVLab-RG)"
-  echo "  -l, --location         Azure region (default: eastus)"
+  echo "  -l, --location         Azure region (default: swedencentral)"
   echo "  -n, --name             Computer name (default: hypervhost)"
   echo "  -u, --username         Admin username (default: azureuser)"
   echo "  -s, --vm-size          VM size (default: Standard_D8s_v5)"
@@ -70,11 +70,26 @@ if [[ -z "$ADMIN_PASSWORD" ]]; then
   show_help
 fi
 
+# Check prerequisites
+echo -e "\033[0;36mChecking prerequisites...\033[0m"
+
 # Check if Azure CLI is installed
 if ! command -v az &> /dev/null; then
-  echo "Error: Azure CLI not found. Please install it before running this script."
+  echo -e "\033[0;31mError: Azure CLI not found. Please install it before running this script.\033[0m"
   echo "Visit: https://docs.microsoft.com/en-us/cli/azure/install-azure-cli"
   exit 1
+else
+  AZ_VERSION=$(az version --query '"azure-cli"' -o tsv)
+  echo -e "\033[0;32mAzure CLI version $AZ_VERSION is installed\033[0m"
+fi
+
+# Check if Bicep CLI is installed
+if ! command -v bicep &> /dev/null; then
+  echo -e "\033[0;33mWarning: Bicep CLI not found. This is not critical as Azure CLI can deploy Bicep files, but the Bicep CLI is recommended for local development.\033[0m"
+  echo "To install Bicep CLI, see: https://learn.microsoft.com/azure/azure-resource-manager/bicep/install"
+else
+  BICEP_VERSION=$(bicep --version)
+  echo -e "\033[0;32mBicep CLI version $BICEP_VERSION is installed\033[0m"
 fi
 
 # Check if logged in to Azure
@@ -107,8 +122,9 @@ echo "Starting deployment $DEPLOYMENT_NAME to resource group $RESOURCE_GROUP..."
 az deployment group create \
   --name "$DEPLOYMENT_NAME" \
   --resource-group "$RESOURCE_GROUP" \
-  --template-file "./main.bicep" \
-  --parameters computerName="$COMPUTER_NAME" \
+  --template-file "../../src/bicep/main.bicep" \
+  --parameters location="$LOCATION" \
+               computerName="$COMPUTER_NAME" \
                AdminUsername="$ADMIN_USERNAME" \
                AdminPassword="$ADMIN_PASSWORD" \
                VirtualMachineSize="$VM_SIZE" \
