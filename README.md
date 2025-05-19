@@ -50,7 +50,7 @@ See the [Modular Template Guide](./MODULAR-TEMPLATE-GUIDE.md) for details on the
 ### 1. Deploy the Template
 Click the button below to deploy the template directly in the Azure Portal:
 
-[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FYOUR-USERNAME%2FAzure-Hyper-V-Lab%2Fmain%2Fmain.json)
+[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fjonathan-vella%2FAzure-Hyper-V-Lab%2Fmain%2Fmain.json)
 
 ### 2. Fill in the Required Information
 Provide the necessary details in the Azure Portal.
@@ -103,7 +103,7 @@ The deployment uses a modular Bicep code structure for better maintainability an
 #### Azure Portal Deployment:
 Click the button below to deploy the template directly in the Azure Portal:
 
-[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FYOUR-USERNAME%2FAzure-Hyper-V-Lab%2Fmain%2Fsrc%2Fbicep%2Fmain.json)
+[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fjonathan-vella%2FAzure-Hyper-V-Lab%2Fmain%2Fsrc%2Fbicep%2Fmain.json)
 
 #### Azure CLI Deployment:
 ```bash
@@ -150,7 +150,7 @@ az deployment group create \
 
 ## 📝 General Notes
 
-> **Important**: Before sharing or using this repository, replace all instances of `YOUR-USERNAME` with your actual GitHub username in the URLs and code.
+> **Important**: Before sharing or using this repository, replace all instances of `jonathan-vella` with your actual GitHub username in the URLs and code.
 
 - A wide range of VM sizes is pre-configured in the template to avoid deployment errors.
 - The VM uses **Azure Spot Instances** with an eviction policy set to `deallocate`.

@@ -169,11 +169,11 @@
     },
     "dscFileUrl": {
       "type": "string",
-      "defaultValue": "https://github.com/YOUR-USERNAME/Azure-Hyper-V-Lab/raw/main/dsc/DSCInstallWindowsFeatures.zip"
+      "defaultValue": "https://github.com/jonathan-vella/Azure-Hyper-V-Lab/raw/main/dsc/DSCInstallWindowsFeatures.zip"
     },
     "customScriptUrl": {
       "type": "string",
-      "defaultValue": "https://raw.githubusercontent.com/YOUR-USERNAME/Azure-Hyper-V-Lab/main/src/scripts/HostConfig.ps1"
+      "defaultValue": "https://raw.githubusercontent.com/jonathan-vella/Azure-Hyper-V-Lab/main/src/scripts/HostConfig.ps1"
     }
   },
   "variables": {
@@ -619,14 +619,14 @@
             },
             "dscFileUrl": {
               "type": "string",
-              "defaultValue": "https://github.com/YOUR-USERNAME/Azure-Hyper-V-Lab/raw/main/dsc/DSCInstallWindowsFeatures.zip",
+              "defaultValue": "https://github.com/jonathan-vella/Azure-Hyper-V-Lab/raw/main/dsc/DSCInstallWindowsFeatures.zip",
               "metadata": {
                 "description": "Extension dependencies"
               }
             },
             "customScriptUrl": {
               "type": "string",
-              "defaultValue": "https://raw.githubusercontent.com/YOUR-USERNAME/Azure-Hyper-V-Lab/main/src/scripts/HostConfig.ps1"
+              "defaultValue": "https://raw.githubusercontent.com/jonathan-vella/Azure-Hyper-V-Lab/main/src/scripts/HostConfig.ps1"
             }
           },
           "resources": [

@@ -12,7 +12,7 @@ This guide will help you quickly deploy the Hyper-V Lab environment using our mo
 
 ### 1. Clone the Repository
 ```powershell
-git clone https://github.com/YOUR-USERNAME/Azure-Hyper-V-Lab.git
+git clone https://github.com/jonathan-vella/Azure-Hyper-V-Lab.git
 cd Azure-Hyper-V-Lab
 ```
 
@@ -37,7 +37,7 @@ Connect-AzAccount
 
 ### 1. Clone the Repository
 ```bash
-git clone https://github.com/YOUR-USERNAME/Azure-Hyper-V-Lab.git
+git clone https://github.com/jonathan-vella/Azure-Hyper-V-Lab.git
 cd Azure-Hyper-V-Lab
 ```
 

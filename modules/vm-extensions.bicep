@@ -5,10 +5,10 @@ param location string
 param vmName string
 
 @description('URL to the DSC configuration file. Update this with your own GitHub username when forking the repository.')
-param dscFileUrl string = 'https://github.com/YOUR-USERNAME/Azure-Hyper-V-Lab/raw/main/dsc/DSCInstallWindowsFeatures.zip'
+param dscFileUrl string = 'https://github.com/jonathan-vella/Azure-Hyper-V-Lab/raw/main/dsc/DSCInstallWindowsFeatures.zip'
 
 @description('URL to the custom script file. Update this with your own GitHub username when forking the repository.')
-param customScriptUrl string = 'https://raw.githubusercontent.com/YOUR-USERNAME/Azure-Hyper-V-Lab/main/src/scripts/HostConfig.ps1'
+param customScriptUrl string = 'https://raw.githubusercontent.com/jonathan-vella/Azure-Hyper-V-Lab/main/src/scripts/HostConfig.ps1'
 
 @description('Deployment of DSC Configuration. Enablement of Hyper-V and DHCP Roles along with RSAT Tools.')
 resource vmExtension 'Microsoft.Compute/virtualMachines/extensions@2023-09-01' = {

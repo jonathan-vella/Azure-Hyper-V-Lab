@@ -19,7 +19,7 @@ $files = @(
     "..\..\QUICKSTART.md"
 )
 
-$placeholder = "YOUR-USERNAME"
+$placeholder = "your-username"
 $originalRepo = "jonathan-vella/Azure-Hyper-V-Lab"
 
 Write-Host "Updating GitHub URLs to use username: $GitHubUsername" -ForegroundColor Cyan

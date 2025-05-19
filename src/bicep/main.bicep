@@ -139,10 +139,10 @@ param subnetPrefix string = '192.168.0.0/28'
 
 // DSC and custom script configuration
 @description('URL to the DSC configuration file. Update this with your own GitHub username when forking the repository.')
-param dscFileUrl string = 'https://github.com/YOUR-USERNAME/Azure-Hyper-V-Lab/raw/main/dsc/DSCInstallWindowsFeatures.zip'
+param dscFileUrl string = 'https://github.com/jonathan-vella/Azure-Hyper-V-Lab/raw/main/dsc/DSCInstallWindowsFeatures.zip'
 
 @description('URL to the custom script file. Update this with your own GitHub username when forking the repository.')
-param customScriptUrl string = 'https://raw.githubusercontent.com/YOUR-USERNAME/Azure-Hyper-V-Lab/main/src/scripts/HostConfig.ps1'
+param customScriptUrl string = 'https://raw.githubusercontent.com/jonathan-vella/Azure-Hyper-V-Lab/main/src/scripts/HostConfig.ps1'
 
 // Deployment name - using unique naming for tracking (no runtime functions)
 var deploymentNameSuffix = uniqueString(resourceGroup().id, computerName)
