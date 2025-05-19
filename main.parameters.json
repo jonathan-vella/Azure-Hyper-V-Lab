@@ -1,0 +1,38 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "location": {
+      "value": "[resourceGroup().location]"
+    },
+    "computerName": {
+      "value": "hypervhost"
+    },
+    "AdminUsername": {
+      "value": "azureuser"
+    },    "AdminPassword": {
+      "value": "P@ssw0rd1234"
+    },
+    "VirtualMachineSize": {
+      "value": "Standard_D8s_v5"
+    },
+    "vnetName": {
+      "value": "vnet-hypervlab-01"
+    },
+    "vnetaddressPrefix": {
+      "value": "192.168.0.0/24"
+    },
+    "subnetName": {
+      "value": "snet-hypervlab-01"
+    },
+    "subnetPrefix": {
+      "value": "192.168.0.0/28"
+    },
+    "dscFileUrl": {
+      "value": "https://github.com/george-markou/Azure-Hyper-V-Lab/raw/main/dsc/DSCInstallWindowsFeatures.zip"
+    },
+    "customScriptUrl": {
+      "value": "https://raw.githubusercontent.com/george-markou/Azure-Hyper-V-Lab/main/HostConfig.ps1"
+    }
+  }
+}

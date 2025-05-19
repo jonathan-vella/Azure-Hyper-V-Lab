@@ -4,6 +4,17 @@ Welcome to the **Azure Hyper-V Lab**! This project provides an Azure IaaS VM Dep
 
 ---
 
+## 🚀 What's New!
+
+This project has been modernized with a **modular Bicep code structure** that follows Azure best practices. The new structure provides:
+
+- **Improved maintainability** through separation of concerns
+- **Better code organization** with dedicated modules for each resource type
+- **Increased reusability** for components in other projects
+- **Enhanced deployment options** with both PowerShell and Azure CLI scripts
+
+See the [Modular Template Guide](./MODULAR-TEMPLATE-GUIDE.md) for details on the new structure.
+
 ## 🌟 What's Included?
 
 ### Infrastructure:
@@ -66,6 +77,66 @@ Start creating Windows Server 2025 Guest OSes using the ISO file stored under `F
 
 ![Windows Server 2025 Evaluation ISO](./images/iso.png)
 ---
+
+## 🧰 Modular Bicep Code Structure
+
+The deployment uses a modular Bicep code structure for better maintainability and scalability:
+
+### Modules Organization:
+- **main.bicep**: Main deployment template that orchestrates all modules
+- **modules/network.bicep**: Network resources (VNet, Subnet, NSG, Public IP, NIC)
+- **modules/vm.bicep**: Virtual machine configuration
+- **modules/vm-extensions.bicep**: VM extensions for DSC and custom script
+
+### Deployment Options:
+
+#### Azure Portal Deployment:
+Click the button below to deploy the template directly in the Azure Portal:
+
+[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fgeorge-markou%2FAzure-Hyper-V-Lab%2Fmain%2Fmain.json)
+
+#### Azure CLI Deployment:
+```bash
+# Create a resource group
+az group create --name HyperVLab --location eastus
+
+# Deploy the Bicep template
+az deployment group create \
+  --resource-group HyperVLab \
+  --template-file main.bicep \
+  --parameters computerName=hypervhost AdminUsername=yourUsername AdminPassword=yourStrongPassword
+```
+
+#### PowerShell Deployment:
+```powershell
+# Option 1: Use the deployment script (recommended)
+.\Deploy-HyperVLab.ps1 -ResourceGroupName "MyHyperVLab" -Location "eastus" -AdminPassword (ConvertTo-SecureString -String 'yourStrongPassword' -AsPlainText -Force)
+
+# Option 2: Manual deployment
+New-AzResourceGroup -Name HyperVLab -Location eastus
+
+New-AzResourceGroupDeployment `
+  -ResourceGroupName HyperVLab `
+  -TemplateFile main.bicep `
+  -computerName hypervhost `
+  -AdminUsername yourUsername `
+  -AdminPassword (ConvertTo-SecureString -String 'yourStrongPassword' -AsPlainText -Force)
+```
+
+### Bash/Azure CLI Deployment:
+```bash
+# Option 1: Use the deployment script (recommended)
+chmod +x ./deploy-hyperv-lab.sh
+./deploy-hyperv-lab.sh --resource-group MyHyperVLab --location eastus --password 'yourStrongPassword'
+
+# Option 2: Manual deployment
+az group create --name HyperVLab --location eastus
+
+az deployment group create \
+  --resource-group HyperVLab \
+  --template-file main.bicep \
+  --parameters computerName=hypervhost AdminUsername=azureuser AdminPassword='yourStrongPassword'
+```
 
 ## 📝 General Notes
 

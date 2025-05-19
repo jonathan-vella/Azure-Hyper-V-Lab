@@ -4,8 +4,8 @@
   "metadata": {
     "_generator": {
       "name": "bicep",
-      "version": "0.31.92.45157",
-      "templateHash": "1412752903554453222"
+      "version": "0.34.44.8038",
+      "templateHash": "17670113264288736239"
     }
   },
   "parameters": {
@@ -91,14 +91,13 @@
         "Standard_D8s_v3",
         "Standard_D16s_v3",
         "Standard_D32s_v3",
-        "Standard_D64_v3",
+        "Standard_D64s_v3",
         "Standard_E2_v3",
         "Standard_E4_v3",
         "Standard_E8_v3",
         "Standard_E16_v3",
         "Standard_E32_v3",
         "Standard_E64_v3",
-        "Standard_D64s_v3",
         "Standard_E2s_v3",
         "Standard_E4s_v3",
         "Standard_E8s_v3",
@@ -153,7 +152,7 @@
       "type": "string",
       "defaultValue": "vnet-hypervlab-01",
       "metadata": {
-        "description": "Name of the Virtual Network"
+        "description": "Virtual Network(VNet) Configuration"
       }
     },
     "vnetaddressPrefix": {
@@ -167,248 +166,547 @@
     "subnetPrefix": {
       "type": "string",
       "defaultValue": "192.168.0.0/28"
+    },
+    "dscFileUrl": {
+      "type": "string",
+      "defaultValue": "https://github.com/george-markou/Azure-Hyper-V-Lab/raw/main/dsc/DSCInstallWindowsFeatures.zip"
+    },
+    "customScriptUrl": {
+      "type": "string",
+      "defaultValue": "https://raw.githubusercontent.com/george-markou/Azure-Hyper-V-Lab/main/HostConfig.ps1"
     }
+  },
+  "variables": {
+    "deploymentNameSuffix": "[uniqueString(resourceGroup().id, parameters('computerName'))]"
   },
   "resources": [
     {
-      "type": "Microsoft.Network/networkSecurityGroups",
-      "apiVersion": "2021-05-01",
-      "name": "[format('{0}-nsg', parameters('computerName'))]",
-      "location": "[resourceGroup().location]",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2022-09-01",
+      "name": "[format('{0}-network-{1}', parameters('computerName'), variables('deploymentNameSuffix'))]",
       "properties": {
-        "securityRules": [
-          {
-            "name": "Allow_RDP",
-            "properties": {
-              "protocol": "Tcp",
-              "sourcePortRange": "*",
-              "destinationPortRange": "3389",
-              "sourceAddressPrefix": "*",
-              "destinationAddressPrefix": "*",
-              "access": "Allow",
-              "priority": 100,
-              "direction": "Inbound",
-              "sourcePortRanges": [],
-              "destinationPortRanges": [],
-              "sourceAddressPrefixes": [],
-              "destinationAddressPrefixes": []
-            }
-          }
-        ]
-      },
-      "metadata": {
-        "description": "Deployment of Network Security Group(NSG)"
-      }
-    },
-    {
-      "type": "Microsoft.Network/virtualNetworks",
-      "apiVersion": "2021-05-01",
-      "name": "[format('{0}-vnet', parameters('vnetName'))]",
-      "location": "[resourceGroup().location]",
-      "properties": {
-        "addressSpace": {
-          "addressPrefixes": [
-            "[parameters('vnetaddressPrefix')]"
-          ]
+        "expressionEvaluationOptions": {
+          "scope": "inner"
         },
-        "subnets": [
-          {
-            "name": "[parameters('subnetName')]",
-            "properties": {
-              "addressPrefix": "[parameters('subnetPrefix')]"
-            }
-          }
-        ]
-      },
-      "metadata": {
-        "description": "Deployment of Virtual Network(VNet)"
-      }
-    },
-    {
-      "type": "Microsoft.Network/publicIPAddresses",
-      "apiVersion": "2021-02-01",
-      "name": "[format('{0}-pip', parameters('computerName'))]",
-      "location": "[resourceGroup().location]",
-      "sku": {
-        "name": "Standard",
-        "tier": "Regional"
-      },
-      "properties": {
-        "deleteOption": "Delete",
-        "publicIPAllocationMethod": "Static"
-      },
-      "metadata": {
-        "description": "Deployment of Public IP Address(PIP)"
-      }
-    },
-    {
-      "type": "Microsoft.Network/networkInterfaces",
-      "apiVersion": "2021-05-01",
-      "name": "[format('{0}-nic', parameters('computerName'))]",
-      "location": "[resourceGroup().location]",
-      "properties": {
-        "ipConfigurations": [
-          {
-            "name": "ipconfig01",
-            "properties": {
-              "privateIPAllocationMethod": "Dynamic",
-              "subnet": {
-                "id": "[format('{0}/subnets/{1}', resourceId('Microsoft.Network/virtualNetworks', format('{0}-vnet', parameters('vnetName'))), parameters('subnetName'))]"
-              },
-              "publicIPAddress": {
-                "id": "[resourceId(resourceGroup().name, 'Microsoft.Network/publicIPAddresses', format('{0}-pip', parameters('computerName')))]"
-              }
-            }
-          }
-        ],
-        "dnsSettings": {
-          "dnsServers": []
-        },
-        "enableIPForwarding": true,
-        "networkSecurityGroup": {
-          "id": "[resourceId('Microsoft.Network/networkSecurityGroups', format('{0}-nsg', parameters('computerName')))]",
-          "location": "[resourceGroup().location]"
-        }
-      },
-      "dependsOn": [
-        "[resourceId('Microsoft.Network/networkSecurityGroups', format('{0}-nsg', parameters('computerName')))]",
-        "[resourceId('Microsoft.Network/publicIPAddresses', format('{0}-pip', parameters('computerName')))]",
-        "[resourceId('Microsoft.Network/virtualNetworks', format('{0}-vnet', parameters('vnetName')))]"
-      ],
-      "metadata": {
-        "description": "Deployment of Network Interface Card(NIC)"
-      }
-    },
-    {
-      "type": "Microsoft.Compute/virtualMachines",
-      "apiVersion": "2021-03-01",
-      "name": "[parameters('computerName')]",
-      "location": "[parameters('location')]",
-      "properties": {
-        "hardwareProfile": {
-          "vmSize": "[parameters('VirtualMachineSize')]"
-        },
-        "diagnosticsProfile": {
-          "bootDiagnostics": {
-            "enabled": true
-          }
-        },
-        "storageProfile": {
-          "imageReference": {
-            "publisher": "MicrosoftWindowsServer",
-            "offer": "WindowsServer",
-            "sku": "2025-datacenter-g2",
-            "version": "latest"
+        "mode": "Incremental",
+        "parameters": {
+          "location": {
+            "value": "[parameters('location')]"
           },
-          "osDisk": {
-            "name": "[format('{0}-OsDisk', parameters('computerName'))]",
-            "createOption": "FromImage",
-            "deleteOption": "Delete",
-            "managedDisk": {
-              "storageAccountType": "Premium_LRS"
+          "namingPrefix": {
+            "value": "[parameters('computerName')]"
+          },
+          "vnetName": {
+            "value": "[parameters('vnetName')]"
+          },
+          "vnetaddressPrefix": {
+            "value": "[parameters('vnetaddressPrefix')]"
+          },
+          "subnetName": {
+            "value": "[parameters('subnetName')]"
+          },
+          "subnetPrefix": {
+            "value": "[parameters('subnetPrefix')]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.34.44.8038",
+              "templateHash": "8207919154411340344"
+            }
+          },
+          "parameters": {
+            "location": {
+              "type": "string",
+              "metadata": {
+                "description": "Location for all resources."
+              }
             },
-            "caching": "ReadWrite"
-          },
-          "dataDisks": [
-            {
-              "lun": 0,
-              "name": "[format('{0}-DataDisk1', parameters('computerName'))]",
-              "createOption": "Empty",
-              "diskSizeGB": 512,
-              "caching": "ReadOnly",
-              "deleteOption": "Delete",
-              "managedDisk": {
-                "storageAccountType": "Premium_LRS"
+            "namingPrefix": {
+              "type": "string",
+              "metadata": {
+                "description": "Name prefix for all network resources"
               }
+            },
+            "vnetName": {
+              "type": "string",
+              "metadata": {
+                "description": "Virtual Network(VNet) Configuration"
+              }
+            },
+            "vnetaddressPrefix": {
+              "type": "string"
+            },
+            "subnetName": {
+              "type": "string"
+            },
+            "subnetPrefix": {
+              "type": "string"
             }
-          ]
-        },
-        "osProfile": {
-          "computerName": "[parameters('computerName')]",
-          "adminUsername": "[parameters('AdminUsername')]",
-          "adminPassword": "[parameters('AdminPassword')]"
-        },
-        "securityProfile": {
-          "uefiSettings": {
-            "secureBootEnabled": true,
-            "vTpmEnabled": true
           },
-          "securityType": "TrustedLaunch"
-        },
-        "priority": "Spot",
-        "evictionPolicy": "Deallocate",
-        "billingProfile": {
-          "maxPrice": -1
-        },
-        "networkProfile": {
-          "networkInterfaces": [
+          "resources": [
             {
-              "id": "[resourceId('Microsoft.Network/networkInterfaces', format('{0}-nic', parameters('computerName')))]",
+              "type": "Microsoft.Network/networkSecurityGroups",
+              "apiVersion": "2023-05-01",
+              "name": "[format('{0}-nsg', parameters('namingPrefix'))]",
+              "location": "[parameters('location')]",
               "properties": {
-                "primary": true,
-                "deleteOption": "Delete"
+                "securityRules": [
+                  {
+                    "name": "Allow_RDP",
+                    "properties": {
+                      "protocol": "Tcp",
+                      "sourcePortRange": "*",
+                      "destinationPortRange": "3389",
+                      "sourceAddressPrefix": "*",
+                      "destinationAddressPrefix": "*",
+                      "access": "Allow",
+                      "priority": 100,
+                      "direction": "Inbound",
+                      "sourcePortRanges": [],
+                      "destinationPortRanges": [],
+                      "sourceAddressPrefixes": [],
+                      "destinationAddressPrefixes": []
+                    }
+                  }
+                ]
+              },
+              "tags": {
+                "purpose": "hyper-v-lab"
+              },
+              "metadata": {
+                "description": "Deployment of Network Security Group(NSG)"
+              }
+            },
+            {
+              "type": "Microsoft.Network/virtualNetworks",
+              "apiVersion": "2023-05-01",
+              "name": "[format('{0}-vnet', parameters('vnetName'))]",
+              "location": "[parameters('location')]",
+              "properties": {
+                "addressSpace": {
+                  "addressPrefixes": [
+                    "[parameters('vnetaddressPrefix')]"
+                  ]
+                },
+                "subnets": [
+                  {
+                    "name": "[parameters('subnetName')]",
+                    "properties": {
+                      "addressPrefix": "[parameters('subnetPrefix')]",
+                      "networkSecurityGroup": {
+                        "id": "[resourceId('Microsoft.Network/networkSecurityGroups', format('{0}-nsg', parameters('namingPrefix')))]"
+                      }
+                    }
+                  }
+                ]
+              },
+              "tags": {
+                "purpose": "hyper-v-lab"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Network/networkSecurityGroups', format('{0}-nsg', parameters('namingPrefix')))]"
+              ],
+              "metadata": {
+                "description": "Deployment of Virtual Network(VNet)"
+              }
+            },
+            {
+              "type": "Microsoft.Network/publicIPAddresses",
+              "apiVersion": "2023-05-01",
+              "name": "[format('{0}-pip', parameters('namingPrefix'))]",
+              "location": "[parameters('location')]",
+              "sku": {
+                "name": "Standard",
+                "tier": "Regional"
+              },
+              "properties": {
+                "deleteOption": "Delete",
+                "publicIPAllocationMethod": "Static",
+                "dnsSettings": {
+                  "domainNameLabel": "[toLower(parameters('namingPrefix'))]"
+                }
+              },
+              "tags": {
+                "purpose": "hyper-v-lab"
+              },
+              "metadata": {
+                "description": "Deployment of Public IP Address(PIP)"
+              }
+            },
+            {
+              "type": "Microsoft.Network/networkInterfaces",
+              "apiVersion": "2023-05-01",
+              "name": "[format('{0}-nic', parameters('namingPrefix'))]",
+              "location": "[parameters('location')]",
+              "properties": {
+                "ipConfigurations": [
+                  {
+                    "name": "ipconfig01",
+                    "properties": {
+                      "privateIPAllocationMethod": "Dynamic",
+                      "subnet": {
+                        "id": "[format('{0}/subnets/{1}', resourceId('Microsoft.Network/virtualNetworks', format('{0}-vnet', parameters('vnetName'))), parameters('subnetName'))]"
+                      },
+                      "publicIPAddress": {
+                        "id": "[resourceId('Microsoft.Network/publicIPAddresses', format('{0}-pip', parameters('namingPrefix')))]"
+                      }
+                    }
+                  }
+                ],
+                "dnsSettings": {
+                  "dnsServers": []
+                },
+                "enableIPForwarding": true,
+                "networkSecurityGroup": {
+                  "id": "[resourceId('Microsoft.Network/networkSecurityGroups', format('{0}-nsg', parameters('namingPrefix')))]"
+                }
+              },
+              "tags": {
+                "purpose": "hyper-v-lab"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Network/networkSecurityGroups', format('{0}-nsg', parameters('namingPrefix')))]",
+                "[resourceId('Microsoft.Network/publicIPAddresses', format('{0}-pip', parameters('namingPrefix')))]",
+                "[resourceId('Microsoft.Network/virtualNetworks', format('{0}-vnet', parameters('vnetName')))]"
+              ],
+              "metadata": {
+                "description": "Deployment of Network Interface Card(NIC)"
               }
             }
-          ]
+          ],
+          "outputs": {
+            "nicId": {
+              "type": "string",
+              "value": "[resourceId('Microsoft.Network/networkInterfaces', format('{0}-nic', parameters('namingPrefix')))]"
+            },
+            "pipId": {
+              "type": "string",
+              "value": "[resourceId('Microsoft.Network/publicIPAddresses', format('{0}-pip', parameters('namingPrefix')))]"
+            },
+            "pipFqdn": {
+              "type": "string",
+              "value": "[reference(resourceId('Microsoft.Network/publicIPAddresses', format('{0}-pip', parameters('namingPrefix'))), '2023-05-01').dnsSettings.fqdn]"
+            }
+          }
         }
-      },
-      "dependsOn": [
-        "[resourceId('Microsoft.Network/networkInterfaces', format('{0}-nic', parameters('computerName')))]"
-      ],
-      "metadata": {
-        "description": "Deployment of Virtual Machine with Nested Virtualization"
       }
     },
     {
-      "type": "Microsoft.Compute/virtualMachines/extensions",
-      "apiVersion": "2021-03-01",
-      "name": "[format('{0}/{1}', parameters('computerName'), 'InstallWindowsFeatures')]",
-      "location": "[parameters('location')]",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2022-09-01",
+      "name": "[format('{0}-vm-{1}', parameters('computerName'), variables('deploymentNameSuffix'))]",
       "properties": {
-        "publisher": "Microsoft.Powershell",
-        "type": "DSC",
-        "typeHandlerVersion": "2.77",
-        "autoUpgradeMinorVersion": true,
-        "settings": {
-          "wmfVersion": "latest",
-          "configuration": {
-            "url": "https://github.com/george-markou/Azure-Hyper-V-Lab/raw/main/dsc/DSCInstallWindowsFeatures.zip",
-            "script": "DSCInstallWindowsFeatures.ps1",
-            "function": "InstallWindowsFeatures"
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "location": {
+            "value": "[parameters('location')]"
+          },
+          "computerName": {
+            "value": "[parameters('computerName')]"
+          },
+          "adminUsername": {
+            "value": "[parameters('AdminUsername')]"
+          },
+          "adminPassword": {
+            "value": "[parameters('AdminPassword')]"
+          },
+          "vmSize": {
+            "value": "[parameters('VirtualMachineSize')]"
+          },
+          "networkInterfaceId": {
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', format('{0}-network-{1}', parameters('computerName'), variables('deploymentNameSuffix'))), '2022-09-01').outputs.nicId.value]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.34.44.8038",
+              "templateHash": "15391665995146541217"
+            }
+          },
+          "parameters": {
+            "location": {
+              "type": "string",
+              "metadata": {
+                "description": "Location for all resources."
+              }
+            },
+            "computerName": {
+              "type": "string",
+              "metadata": {
+                "description": "Name of Hyper-V Host Virtual Machine"
+              }
+            },
+            "adminUsername": {
+              "type": "string",
+              "metadata": {
+                "description": "Admin Username for the Host Virtual Machine"
+              }
+            },
+            "adminPassword": {
+              "type": "securestring",
+              "metadata": {
+                "description": "Admin User Password for the Host Virtual Machine"
+              }
+            },
+            "vmSize": {
+              "type": "string",
+              "metadata": {
+                "description": "Size of the Host Virtual Machine"
+              }
+            },
+            "networkInterfaceId": {
+              "type": "string",
+              "metadata": {
+                "description": "Network interface ID for the VM"
+              }
+            }
+          },
+          "resources": [
+            {
+              "type": "Microsoft.Compute/virtualMachines",
+              "apiVersion": "2023-09-01",
+              "name": "[parameters('computerName')]",
+              "location": "[parameters('location')]",
+              "properties": {
+                "hardwareProfile": {
+                  "vmSize": "[parameters('vmSize')]"
+                },
+                "diagnosticsProfile": {
+                  "bootDiagnostics": {
+                    "enabled": true
+                  }
+                },
+                "storageProfile": {
+                  "imageReference": {
+                    "publisher": "MicrosoftWindowsServer",
+                    "offer": "WindowsServer",
+                    "sku": "2025-datacenter-g2",
+                    "version": "latest"
+                  },
+                  "osDisk": {
+                    "name": "[format('{0}-OsDisk', parameters('computerName'))]",
+                    "createOption": "FromImage",
+                    "deleteOption": "Delete",
+                    "managedDisk": {
+                      "storageAccountType": "Premium_LRS"
+                    },
+                    "caching": "ReadWrite"
+                  },
+                  "dataDisks": [
+                    {
+                      "lun": 0,
+                      "name": "[format('{0}-DataDisk1', parameters('computerName'))]",
+                      "createOption": "Empty",
+                      "diskSizeGB": 512,
+                      "caching": "ReadOnly",
+                      "deleteOption": "Delete",
+                      "managedDisk": {
+                        "storageAccountType": "Premium_LRS"
+                      }
+                    }
+                  ]
+                },
+                "osProfile": {
+                  "computerName": "[parameters('computerName')]",
+                  "adminUsername": "[parameters('adminUsername')]",
+                  "adminPassword": "[parameters('adminPassword')]"
+                },
+                "securityProfile": {
+                  "uefiSettings": {
+                    "secureBootEnabled": true,
+                    "vTpmEnabled": true
+                  },
+                  "securityType": "TrustedLaunch"
+                },
+                "priority": "Spot",
+                "evictionPolicy": "Deallocate",
+                "billingProfile": {
+                  "maxPrice": -1
+                },
+                "networkProfile": {
+                  "networkInterfaces": [
+                    {
+                      "id": "[parameters('networkInterfaceId')]",
+                      "properties": {
+                        "primary": true,
+                        "deleteOption": "Delete"
+                      }
+                    }
+                  ]
+                }
+              },
+              "tags": {
+                "purpose": "hyper-v-lab"
+              },
+              "metadata": {
+                "description": "Deployment of Virtual Machine with Nested Virtualization"
+              }
+            }
+          ],
+          "outputs": {
+            "vmId": {
+              "type": "string",
+              "value": "[resourceId('Microsoft.Compute/virtualMachines', parameters('computerName'))]"
+            },
+            "vmName": {
+              "type": "string",
+              "value": "[parameters('computerName')]"
+            }
           }
         }
       },
       "dependsOn": [
-        "[resourceId('Microsoft.Compute/virtualMachines', parameters('computerName'))]"
-      ],
-      "metadata": {
-        "description": "Deployment of DSC Configuration. Enablement of Hyper-V and DHCP Roles along with RSAT Tools."
-      }
+        "[resourceId('Microsoft.Resources/deployments', format('{0}-network-{1}', parameters('computerName'), variables('deploymentNameSuffix')))]"
+      ]
     },
     {
-      "type": "Microsoft.Compute/virtualMachines/extensions",
-      "apiVersion": "2021-03-01",
-      "name": "[format('{0}/{1}', parameters('computerName'), 'HostConfiguration')]",
-      "location": "[parameters('location')]",
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2022-09-01",
+      "name": "[format('{0}-extensions-{1}', parameters('computerName'), variables('deploymentNameSuffix'))]",
       "properties": {
-        "publisher": "Microsoft.Compute",
-        "type": "CustomScriptExtension",
-        "typeHandlerVersion": "1.9",
-        "autoUpgradeMinorVersion": true,
-        "settings": {
-          "fileUris": [
-            "https://raw.githubusercontent.com/george-markou/Azure-Hyper-V-Lab/main/HostConfig.ps1"
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "location": {
+            "value": "[parameters('location')]"
+          },
+          "vmName": {
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', format('{0}-vm-{1}', parameters('computerName'), variables('deploymentNameSuffix'))), '2022-09-01').outputs.vmName.value]"
+          },
+          "dscFileUrl": {
+            "value": "[parameters('dscFileUrl')]"
+          },
+          "customScriptUrl": {
+            "value": "[parameters('customScriptUrl')]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.34.44.8038",
+              "templateHash": "3853951563188089770"
+            }
+          },
+          "parameters": {
+            "location": {
+              "type": "string",
+              "metadata": {
+                "description": "Location for all resources."
+              }
+            },
+            "vmName": {
+              "type": "string",
+              "metadata": {
+                "description": "The name of the VM resource"
+              }
+            },
+            "dscFileUrl": {
+              "type": "string",
+              "defaultValue": "https://github.com/george-markou/Azure-Hyper-V-Lab/raw/main/dsc/DSCInstallWindowsFeatures.zip",
+              "metadata": {
+                "description": "Extension dependencies"
+              }
+            },
+            "customScriptUrl": {
+              "type": "string",
+              "defaultValue": "https://raw.githubusercontent.com/george-markou/Azure-Hyper-V-Lab/main/HostConfig.ps1"
+            }
+          },
+          "resources": [
+            {
+              "type": "Microsoft.Compute/virtualMachines/extensions",
+              "apiVersion": "2023-09-01",
+              "name": "[format('{0}/InstallWindowsFeatures', parameters('vmName'))]",
+              "location": "[parameters('location')]",
+              "properties": {
+                "publisher": "Microsoft.Powershell",
+                "type": "DSC",
+                "typeHandlerVersion": "2.77",
+                "autoUpgradeMinorVersion": true,
+                "settings": {
+                  "wmfVersion": "latest",
+                  "configuration": {
+                    "url": "[parameters('dscFileUrl')]",
+                    "script": "DSCInstallWindowsFeatures.ps1",
+                    "function": "InstallWindowsFeatures"
+                  }
+                }
+              },
+              "metadata": {
+                "description": "Deployment of DSC Configuration. Enablement of Hyper-V and DHCP Roles along with RSAT Tools."
+              }
+            },
+            {
+              "type": "Microsoft.Compute/virtualMachines/extensions",
+              "apiVersion": "2023-09-01",
+              "name": "[format('{0}/HostConfiguration', parameters('vmName'))]",
+              "location": "[parameters('location')]",
+              "properties": {
+                "publisher": "Microsoft.Compute",
+                "type": "CustomScriptExtension",
+                "typeHandlerVersion": "1.10",
+                "autoUpgradeMinorVersion": true,
+                "settings": {
+                  "fileUris": [
+                    "[parameters('customScriptUrl')]"
+                  ],
+                  "commandToExecute": "powershell -ExecutionPolicy Unrestricted -File HostConfig.ps1"
+                }
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Compute/virtualMachines/extensions', split(format('{0}/InstallWindowsFeatures', parameters('vmName')), '/')[0], split(format('{0}/InstallWindowsFeatures', parameters('vmName')), '/')[1])]"
+              ],
+              "metadata": {
+                "description": "Custom Script Execution. Configuration of Server Roles, installation of Chocolatey and deployment of software."
+              }
+            }
           ],
-          "commandToExecute": "powershell -ExecutionPolicy Unrestricted -File HostConfig.ps1"
+          "outputs": {
+            "dscExtensionId": {
+              "type": "string",
+              "value": "[resourceId('Microsoft.Compute/virtualMachines/extensions', split(format('{0}/InstallWindowsFeatures', parameters('vmName')), '/')[0], split(format('{0}/InstallWindowsFeatures', parameters('vmName')), '/')[1])]"
+            },
+            "customScriptExtensionId": {
+              "type": "string",
+              "value": "[resourceId('Microsoft.Compute/virtualMachines/extensions', split(format('{0}/HostConfiguration', parameters('vmName')), '/')[0], split(format('{0}/HostConfiguration', parameters('vmName')), '/')[1])]"
+            }
+          }
         }
       },
       "dependsOn": [
-        "[resourceId('Microsoft.Compute/virtualMachines', parameters('computerName'))]",
-        "[resourceId('Microsoft.Compute/virtualMachines/extensions', parameters('computerName'), 'InstallWindowsFeatures')]"
-      ],
-      "metadata": {
-        "description": "Custom Script Execution. Configuration of Server Roles, installation of Chocolatey and deployment of software."
-      }
+        "[resourceId('Microsoft.Resources/deployments', format('{0}-vm-{1}', parameters('computerName'), variables('deploymentNameSuffix')))]"
+      ]
     }
-  ]
+  ],
+  "outputs": {
+    "adminUsername": {
+      "type": "string",
+      "value": "[parameters('AdminUsername')]"
+    },
+    "hostname": {
+      "type": "string",
+      "value": "[if(not(equals(reference(resourceId('Microsoft.Resources/deployments', format('{0}-network-{1}', parameters('computerName'), variables('deploymentNameSuffix'))), '2022-09-01').outputs.pipFqdn.value, null())), reference(resourceId('Microsoft.Resources/deployments', format('{0}-network-{1}', parameters('computerName'), variables('deploymentNameSuffix'))), '2022-09-01').outputs.pipFqdn.value, 'No FQDN available')]"
+    },
+    "rdpCommand": {
+      "type": "string",
+      "value": "[if(not(equals(reference(resourceId('Microsoft.Resources/deployments', format('{0}-network-{1}', parameters('computerName'), variables('deploymentNameSuffix'))), '2022-09-01').outputs.pipFqdn.value, null())), format('mstsc.exe /v:{0}', reference(resourceId('Microsoft.Resources/deployments', format('{0}-network-{1}', parameters('computerName'), variables('deploymentNameSuffix'))), '2022-09-01').outputs.pipFqdn.value), format('mstsc.exe /v:{0}', parameters('computerName')))]"
+    }
+  }
 }

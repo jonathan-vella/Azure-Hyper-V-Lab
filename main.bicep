@@ -1,3 +1,13 @@
+/*
+  Hyper-V Lab Deployment in Azure
+  This template deploys an Azure VM with nested virtualization enabled
+  for running Hyper-V workloads in the cloud.
+  
+  Author: [Original by george-markou, Modified to be modular]
+  Last updated: 2025-05-19
+*/
+
+// Main template parameters
 @description('Location for all resources.')
 param location string = resourceGroup().location
 
@@ -66,14 +76,13 @@ param AdminPassword string
   'Standard_D8s_v3'
   'Standard_D16s_v3'
   'Standard_D32s_v3'
-  'Standard_D64_v3'
+  'Standard_D64s_v3'
   'Standard_E2_v3'
   'Standard_E4_v3'
   'Standard_E8_v3'
   'Standard_E16_v3'
   'Standard_E32_v3'
   'Standard_E64_v3'
-  'Standard_D64s_v3'
   'Standard_E2s_v3'
   'Standard_E4s_v3'
   'Standard_E8s_v3'
@@ -128,213 +137,51 @@ param vnetaddressPrefix string = '192.168.0.0/24'
 param subnetName string = 'snet-hypervlab-01'
 param subnetPrefix string = '192.168.0.0/28'
 
-@description('Deployment of Network Security Group(NSG)')
-resource nsg 'Microsoft.Network/networkSecurityGroups@2021-05-01' = {
-  name: '${computerName}-nsg'
-  location: resourceGroup().location
-  properties: {
-    securityRules: [
-      {
-        name: 'Allow_RDP'
-        properties: {
-          protocol: 'Tcp'
-          sourcePortRange: '*'
-          destinationPortRange: '3389'
-          sourceAddressPrefix: '*'
-          destinationAddressPrefix: '*'
-          access: 'Allow'
-          priority: 100
-          direction: 'Inbound'
-          sourcePortRanges: []
-          destinationPortRanges: []
-          sourceAddressPrefixes: []
-          destinationAddressPrefixes: []
-        }
-      }
-    ]
+// DSC and custom script configuration
+param dscFileUrl string = 'https://github.com/george-markou/Azure-Hyper-V-Lab/raw/main/dsc/DSCInstallWindowsFeatures.zip'
+param customScriptUrl string = 'https://raw.githubusercontent.com/george-markou/Azure-Hyper-V-Lab/main/HostConfig.ps1'
+
+// Deployment name - using unique naming for tracking (no runtime functions)
+var deploymentNameSuffix = uniqueString(resourceGroup().id, computerName)
+
+// Deploy network resources module
+module networkResources 'modules/network.bicep' = {
+  name: '${computerName}-network-${deploymentNameSuffix}'
+  params: {
+    location: location
+    namingPrefix: computerName
+    vnetName: vnetName
+    vnetaddressPrefix: vnetaddressPrefix
+    subnetName: subnetName
+    subnetPrefix: subnetPrefix
   }
 }
 
-@description('Deployment of Virtual Network(VNet)')
-resource vnet 'Microsoft.Network/virtualNetworks@2021-05-01' = {
-  name: '${vnetName}-vnet'
-  location: resourceGroup().location
-   properties: {
-    addressSpace: {
-      addressPrefixes: [
-        vnetaddressPrefix
-      ]
-    }
-    subnets: [
-      {
-        name: subnetName
-        properties: {
-          addressPrefix: subnetPrefix
-        }
-      }
-    ]
+// Deploy VM module
+module hyperVHost 'modules/vm.bicep' = {
+  name: '${computerName}-vm-${deploymentNameSuffix}'
+  params: {
+    location: location
+    computerName: computerName
+    adminUsername: AdminUsername
+    adminPassword: AdminPassword
+    vmSize: VirtualMachineSize
+    networkInterfaceId: networkResources.outputs.nicId
   }
 }
 
-@description('Deployment of Public IP Address(PIP)')
-resource vmPip 'Microsoft.Network/publicIPAddresses@2021-02-01' = {
-  name: '${computerName}-pip'
-  location: resourceGroup().location
-  sku: {
-    name: 'Standard'
-    tier: 'Regional'
-  }
-  properties: {
-    deleteOption: 'Delete'
-    publicIPAllocationMethod: 'Static'
+// Deploy VM extensions module
+module vmExtensions 'modules/vm-extensions.bicep' = {
+  name: '${computerName}-extensions-${deploymentNameSuffix}'
+  params: {
+    location: location
+    vmName: hyperVHost.outputs.vmName
+    dscFileUrl: dscFileUrl
+    customScriptUrl: customScriptUrl
   }
 }
 
-@description('Deployment of Network Interface Card(NIC)')
-resource vmNic 'Microsoft.Network/networkInterfaces@2021-05-01' = {
-  name: '${computerName}-nic'
-  location: resourceGroup().location
-  properties: {
-  ipConfigurations: [
-  {
-    name: 'ipconfig01'
-    properties: {
-      privateIPAllocationMethod: 'Dynamic'
-      subnet: {
-        id: '${vnet.id}/subnets/${subnetName}'
-      }
-      publicIPAddress: {
-      id: resourceId(resourceGroup().name, 'Microsoft.Network/publicIPAddresses', vmPip.name)
-    }
-    }
-  }
-  ]
-  dnsSettings: {
-    dnsServers: [
-      
-    ]
-  }
-  enableIPForwarding: true
-  networkSecurityGroup: {
-    id: nsg.id
-    location: resourceGroup().location
-  }
-  }
-}
-
-@description('Deployment of Virtual Machine with Nested Virtualization')
-resource vm 'Microsoft.Compute/virtualMachines@2021-03-01' = {
-  name: computerName
-  location: location
-  properties: {
-    hardwareProfile: {
-      vmSize: VirtualMachineSize
-    }
-    diagnosticsProfile: {
-      bootDiagnostics: {
-        enabled: true
-      }
-    }
-    storageProfile: {
-      imageReference: {
-        publisher: 'MicrosoftWindowsServer'
-        offer: 'WindowsServer'
-        sku: '2025-datacenter-g2'
-        version: 'latest'
-      }
-      osDisk: {
-        name: '${computerName}-OsDisk'
-        createOption: 'FromImage'
-        deleteOption: 'Delete'
-        managedDisk: {
-          storageAccountType: 'Premium_LRS'
-        }
-        caching: 'ReadWrite'
-      }
-      dataDisks: [
-        {
-          lun: 0
-          name: '${computerName}-DataDisk1'
-          createOption: 'Empty'
-          diskSizeGB: 512
-          caching: 'ReadOnly'
-          deleteOption: 'Delete'
-          managedDisk: {
-            storageAccountType: 'Premium_LRS'
-          }
-        }
-      ]
-    }
-    osProfile: {
-      computerName: computerName
-      adminUsername: AdminUsername
-      adminPassword: AdminPassword
-    }
-    securityProfile: {
-      uefiSettings: {
-        secureBootEnabled: true
-        vTpmEnabled: true
-      }
-      securityType: 'TrustedLaunch'
-    }
-  priority: 'Spot'
-  evictionPolicy: 'Deallocate'
-  billingProfile: {
-    maxPrice: -1
-  }
-    networkProfile: {
-      networkInterfaces: [
-        {
-          id: vmNic.id
-          properties: {
-            primary: true
-            deleteOption: 'Delete'
-          }        
-        }
-      ]
-    }
-  }
-}
-
-@description('Deployment of DSC Configuration. Enablement of Hyper-V and DHCP Roles along with RSAT Tools.')
-resource vmExtension 'Microsoft.Compute/virtualMachines/extensions@2021-03-01' = {
-  parent: vm
-  name: 'InstallWindowsFeatures'
-  location: location
-  properties: {
-    publisher: 'Microsoft.Powershell'
-    type: 'DSC'
-    typeHandlerVersion: '2.77'
-    autoUpgradeMinorVersion: true
-    settings: {
-      wmfVersion: 'latest'
-      configuration: {
-        url: 'https://github.com/george-markou/Azure-Hyper-V-Lab/raw/main/dsc/DSCInstallWindowsFeatures.zip'
-        script: 'DSCInstallWindowsFeatures.ps1'
-        function: 'InstallWindowsFeatures'
-      }
-    }
-  }
-}
-
-@description('Custom Script Execution. Configuration of Server Roles, installation of Chocolatey and deployment of software.')
-resource hostVmSetupExtension 'Microsoft.Compute/virtualMachines/extensions@2021-03-01' = {
-  parent: vm
-  name: 'HostConfiguration'
-  location: location
-  properties: {
-    publisher: 'Microsoft.Compute'
-    type: 'CustomScriptExtension'
-    typeHandlerVersion: '1.9'
-    autoUpgradeMinorVersion: true
-    settings: {
-      fileUris: [
-        'https://raw.githubusercontent.com/george-markou/Azure-Hyper-V-Lab/main/HostConfig.ps1'
-      ]
-      commandToExecute: 'powershell -ExecutionPolicy Unrestricted -File HostConfig.ps1'
-    }
-  }
-  dependsOn: [
-    vmExtension
-  ]
-}
+// Outputs
+output adminUsername string = AdminUsername
+output hostname string = networkResources.outputs.pipFqdn != null ? networkResources.outputs.pipFqdn : 'No FQDN available'
+output rdpCommand string = networkResources.outputs.pipFqdn != null ? 'mstsc.exe /v:${networkResources.outputs.pipFqdn}' : 'mstsc.exe /v:${computerName}'
