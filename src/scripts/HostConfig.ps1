@@ -91,24 +91,37 @@ if (-not (Test-Path "C:\temp")) {
     New-Item -Path "C:\temp" -ItemType Directory -Force | Out-Null
 }
 
-# Copy guest VM setup scripts to C:\temp
-$scriptSource = "$PSScriptRoot"
+# Download guest VM setup scripts directly from GitHub to C:\temp
+$baseGitHubUrl = "https://raw.githubusercontent.com/jonathan-vella/Azure-Hyper-V-Lab/main/src/scripts"
 $guestScripts = @(
     "DC01-Setup.ps1",
     "SQL01-Setup.ps1",
-    "WEB01-Setup.ps1"
+    "WEB01-Setup.ps1",
+    "Setup-GuestVMs.ps1"
 )
 foreach ($script in $guestScripts) {
-    $src = Join-Path $scriptSource $script
-    if (Test-Path $src) {
-        Copy-Item -Path $src -Destination "C:\temp\" -Force
+    $url = "$baseGitHubUrl/$script"
+    $destination = "C:\temp\$script"
+    Write-Host "Downloading $script from GitHub..."
+    try {
+        Invoke-WebRequest -Uri $url -OutFile $destination -ErrorAction Stop
+        Write-Host "$script downloaded successfully to $destination"
+    }
+    catch {
+        Write-Warning "Failed to download $script. Error: $_"
     }
 }
 
-# Copy eShop deployment script to C:\temp
-$eshopDeployScript = Join-Path $PSScriptRoot "..\eshop\Deploy-CoffeeShop.ps1"
-if (Test-Path $eshopDeployScript) {
-    Copy-Item -Path $eshopDeployScript -Destination "C:\temp\" -Force
+# Download eShop deployment script from GitHub to C:\temp
+$eshopScriptUrl = "https://raw.githubusercontent.com/jonathan-vella/Azure-Hyper-V-Lab/main/src/eshop/Deploy-CoffeeShop.ps1"
+$eshopDestination = "C:\temp\Deploy-CoffeeShop.ps1"
+Write-Host "Downloading Deploy-CoffeeShop.ps1 from GitHub..."
+try {
+    Invoke-WebRequest -Uri $eshopScriptUrl -OutFile $eshopDestination -ErrorAction Stop
+    Write-Host "Deploy-CoffeeShop.ps1 downloaded successfully to $eshopDestination"
+}
+catch {
+    Write-Warning "Failed to download Deploy-CoffeeShop.ps1. Error: $_"
 }
 
 

@@ -25,14 +25,29 @@ foreach ($g in $guests) {
         Add-VMHardDiskDrive -VMName $g.Name -Path $vhdFile
         Set-VMProcessor -VMName $g.Name -Count $g.CPU
         Set-VMMemory -VMName $g.Name -DynamicMemoryEnabled $false -StartupBytes $g.RAM
-        Add-VMDvdDrive -VMName $g.Name -Path $isoPath
-        $dvd = Get-VMDvdDrive -VMName $g.Name
+        Add-VMDvdDrive -VMName $g.Name -Path $isoPath        $dvd = Get-VMDvdDrive -VMName $g.Name
         $bootOrder = @($dvd) + (Get-VMHardDiskDrive -VMName $g.Name)
         Set-VMFirmware -VMName $g.Name -BootOrder $bootOrder
         Enable-VMIntegrationService -VMName $g.Name -Name "Guest Service Interface"
-        Write-Host "  VM $($g.Name) created and ISO mounted." -ForegroundColor Green
+        
+        # Disable checkpoints
+        Set-VM -Name $g.Name -CheckpointType Disabled
+        
+        # Configure automatic start action to always start this virtual machine automatically
+        Set-VM -Name $g.Name -AutomaticStartAction Start
+        
+        # Configure automatic stop action to shut down the guest OS
+        Set-VM -Name $g.Name -AutomaticStopAction ShutDown
+        
+        Write-Host "  VM $($g.Name) created, ISO mounted, and auto-start/stop configured." -ForegroundColor Green
     } else {
-        Write-Host "VM $($g.Name) already exists. Skipping creation." -ForegroundColor Yellow
+        Write-Host "VM $($g.Name) already exists. Updating configuration..." -ForegroundColor Yellow
+        
+        # Update configuration for existing VMs
+        Set-VM -Name $g.Name -CheckpointType Disabled
+        Set-VM -Name $g.Name -AutomaticStartAction Start
+        Set-VM -Name $g.Name -AutomaticStopAction ShutDown
+        Write-Host "  VM $($g.Name) configuration updated." -ForegroundColor Green
     }
 }
 
