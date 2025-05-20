@@ -1,4 +1,4 @@
-# Azure Hyper-V Lab
+# 🚀 Azure Hyper-V Lab
 
 [![Azure Deploy](https://img.shields.io/badge/Azure-Deploy-blue?logo=microsoft-azure)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fjonathan-vella%2FAzure-Hyper-V-Lab%2Fmain%2Fsrc%2Fbicep%2Fazuredeploy.json)
 [![License](https://img.shields.io/github/license/jonathan-vella/Azure-Hyper-V-Lab)](https://github.com/jonathan-vella/Azure-Hyper-V-Lab/blob/main/LICENSE)
@@ -8,14 +8,12 @@
 [![Docs](https://img.shields.io/badge/docs-available-brightgreen)](https://github.com/jonathan-vella/Azure-Hyper-V-Lab#documentation)
 [![Contributions](https://img.shields.io/badge/contributions-welcome-orange)](https://github.com/jonathan-vella/Azure-Hyper-V-Lab/blob/main/CONTRIBUTING.md)
 
-# 🚀 Azure Hyper-V Lab
 
 Welcome to the **Azure Hyper-V Lab**! Easily deploy a Windows Server 2025 Datacenter VM with Hyper-V in Azure, complete with nested virtualization, pre-installed tools, and a modular, production-ready Bicep template.
 
 ---
 
 ## 🗺️ Quick Navigation
-- [Azure Hyper-V Lab](#azure-hyper-v-lab)
 - [🚀 Azure Hyper-V Lab](#-azure-hyper-v-lab)
   - [🗺️ Quick Navigation](#️-quick-navigation)
   - [🚀 What's New](#-whats-new)
